@@ -3,7 +3,7 @@
 @import "tailwindcss";
 body {
   /* background-image: url("./assets/data.jpg"); */
-  background-color: black;
+  background-color: #131B2B;
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;

@@ -24,7 +24,11 @@ import AdminPanel from "./pages/Admin/Index";
 import Instructordetais from "./pages/Admin/Instructordetais";
 import InstructorEdit from "./pages/Admin/InstructorEdit";
 import Createcourse from "./pages/Admin/Createcourse";
-import Course from "./pages/Admin/Course";
+// import Course from "./pages/Admin/Course";
+import Addlecture from "./pages/Admin/Addlecture";
+import CourseList from "./pages/Admin/Course/CourseList";
+import EditCourse from "./pages/Admin/EditCourse/EditCourse";
+import Lecture from "./pages/Admin/Lecture/Lecture";
 
 function App() {
   return (
@@ -63,7 +67,16 @@ function App() {
           <Route path="instructordetais" element={<Instructordetais />} />
           <Route path="instructor/edit/:id" element={<InstructorEdit />} />
           <Route path="createcourse" element={<Createcourse />} />
-          <Route path="allcourse" element={<Course />} />
+          <Route path="allcourse" element={<CourseList />} />
+          <Route path="course/:id" element={<EditCourse />} />
+
+          <Route path="course/:id/lecture/create" element={<Addlecture />} />
+          {/* /courses/67fa89a9437bc27e58db8eca/lecture/create */}
+
+          {/* edit lecture  */}
+          {/* /courses/67fa89cf437bc27e58db8ece/lecture/67fa89cf437bc27e58db8ecf/edit */}
+          <Route path="courses/:id/lecture/:id/edit" element={<Lecture />} />
+
         </Route>
       </Routes>
       <Footer />

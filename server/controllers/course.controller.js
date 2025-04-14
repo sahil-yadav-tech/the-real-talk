@@ -194,17 +194,17 @@ const getCourseById = async (req, res) => {
   }
 };
 
-const updateCourse = async (req, res) => {
-  try {
-    const course = await Course.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    if (!course) return res.status(404).json({ message: "Course not found" });
-    return res.status(200).json({ message: "Course updated", course });
-  } catch (err) {
-    return res.status(500).json({ message: "Error updating course", err });
-  }
-};
+// const updateCourse = async (req, res) => {
+//   try {
+//     const course = await Course.findByIdAndUpdate(req.params.id, req.body, {
+//       new: true,
+//     });
+//     if (!course) return res.status(404).json({ message: "Course not found" });
+//     return res.status(200).json({ message: "Course updated", course });
+//   } catch (err) {
+//     return res.status(500).json({ message: "Error updating course", err });
+//   }
+// };
 
 const deleteCourse = async (req, res) => {
   try {
@@ -286,6 +286,118 @@ const markAttendance = async (req, res) => {
   }
 };
 
+const uploadCourseImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image file provided' });
+    }
+
+    // Get the course first to check for existing image
+    const course = await Course.findById(req.params.id);
+    if (!course) {
+      // Delete the uploaded file if course doesn't exist
+      fs.unlinkSync(req.file.path);
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Upload new image to Cloudinary
+    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+      folder: "course_images",
+      resource_type: "auto",
+    });
+
+    // Delete old image if it exists
+    if (course.cloudinary_id) {
+      await cloudinary.uploader.destroy(course.cloudinary_id);
+    }
+
+    // Update course with new image
+    course.image = uploadResult.secure_url;
+    course.cloudinary_id = uploadResult.public_id;
+    await course.save();
+
+    // Delete temporary file
+    fs.unlinkSync(req.file.path);
+
+    res.json({ 
+      message: 'Image uploaded successfully',
+      imageUrl: uploadResult.secure_url 
+    });
+  } catch (err) {
+    // Clean up uploaded file if error occurs
+    if (req.file) fs.unlinkSync(req.file.path);
+    res.status(500).json({ 
+      message: 'Error uploading image',
+      error: err.message 
+    });
+  }
+};
+
+const updateCourse = async (req, res) => {
+  try {
+    const { name, level, description } = req.body;
+    
+    // Find course first to handle image deletion if needed
+    const course = await Course.findById(req.params.id);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Update fields
+    if (name) course.name = name;
+    if (level) course.level = level;
+    if (description) course.description = description;
+
+    // Handle lectures update if provided
+    if (req.body.lectures) {
+      let lectures = [];
+      try {
+        lectures = typeof req.body.lectures === 'string' 
+          ? JSON.parse(req.body.lectures) 
+          : req.body.lectures;
+        
+        // Validate lectures
+        if (!Array.isArray(lectures)) {
+          return res.status(400).json({ message: 'Lectures must be an array' });
+        }
+
+        // Check for lecture conflicts
+        for (const lecture of lectures) {
+          if (lecture._id) {
+            // Update existing lecture
+            const existingLecture = course.lectures.id(lecture._id);
+            if (existingLecture) {
+              existingLecture.set(lecture);
+            }
+          } else {
+            // Add new lecture
+            course.lectures.push({
+              ...lecture,
+              date: new Date(lecture.date),
+              attendanceStatus: lecture.attendanceStatus || "Not Attended"
+            });
+          }
+        }
+      } catch (err) {
+        return res.status(400).json({ message: 'Invalid lectures format' });
+      }
+    }
+
+    await course.save();
+
+    return res.status(200).json({ 
+      message: "Course updated successfully",
+      course 
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ 
+      message: "Error updating course",
+      error: err.message 
+    });
+  }
+};
+
 module.exports = {
   createCourse,
   getCourses,
@@ -295,4 +407,5 @@ module.exports = {
   updateLecture,
   deleteLecture,
   markAttendance,
+  uploadCourseImage
 };
