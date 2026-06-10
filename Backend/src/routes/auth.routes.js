@@ -1,8 +1,8 @@
 import express from "express";
-import { register } from "../controllers/auth.controller.js";
+import { login, register } from "../controllers/auth.controller.js";
 // import { validate } from "../middlewares/validate.middleware.js";
 import { validate } from "../middlewares/validate.middleware.js";
-import { registerSchema } from "../utils/validations/auth.validation.js";
+import { loginSchema, registerSchema } from "../utils/validations/auth.validation.js";
 
 const router = express.Router();
 
@@ -12,6 +12,11 @@ router.post(
   register
 );
 
+router.post(
+  "/login",
+  validate(loginSchema),
+  login
+);
 
 
 export default router;

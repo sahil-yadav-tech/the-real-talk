@@ -1,32 +1,89 @@
 console.log("JAI SHREE RAM JI / JAI BAJARANG BALI JI ❤️ 👏😍");
 
+/*
+File Imports
+*/
 import express from "express";
 import http from "http";
 import cors from "cors";
 import { Server } from "socket.io";
-import authRoutes from "./src/routes/auth.routes.js"
+import cookieParser from "cookie-parser"
+/*
+Local Imports
+*/
 import connectDB from "./src/config/db.js";
-const app = express();
+import authRoutes from "./src/routes/auth.routes.js";
 
-app.use(cors());
+/*
+App Initialization
+*/
+const app = express();
+const server = http.createServer(app);
+
+/*
+Environment Variables
+*/
+const PORT = process.env.PORT || 9876;
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
+/*
+Database Connection
+*/
+connectDB();
+
+/*
+Middlewares
+*/
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-connectDB()
-const server = http.createServer(app);
-
+app.use(cookieParser())
+/*
+Socket.IO Configuration
+*/
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: FRONTEND_URL,
     methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
-app.use("/api/auth", authRoutes);
-const PORT = 9876
+/*
+Socket Events
+*/
+io.on("connection", (socket) => {
+  console.log(`User Connected: ${socket.id}`);
 
-server.listen(PORT, () => {
-  console.log(`Server Running On ${PORT}`);
+  socket.on("disconnect", () => {
+    console.log(`User Disconnected: ${socket.id}`);
+  });
 });
 
+/*
+API Routes
+*/
+app.use("/api/auth", authRoutes);
 
+/*
+Health Check Route
+*/
+app.get("/", (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: "Server is running successfully 🚀",
+  });
+});
+
+/*
+Server Listener
+*/
+server.listen(PORT, () => {
+  console.log(`Server Running On Port ${PORT} 🚀`);
+});

@@ -78,7 +78,8 @@ if (!formData.password) {
 if (!formData.confirmPassword) {
   newErrors.confirmPassword =
     "Confirm password required";
-} else if (
+} 
+else if (
   formData.password !==
   formData.confirmPassword
 ) {

@@ -3,7 +3,10 @@ import dotenv from "dotenv";
 dotenv.config();
 import dns from "dns";
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
-console.log("DATABASE_URL:", process.env.testDb);
+
+/*
+TODO: DATABASE CONNECTION 
+*/
 const connectDB = async () => {
   try {
     const uri = process.env.DATABASE_URL;
@@ -14,7 +17,7 @@ const connectDB = async () => {
 
     await mongoose.connect(uri, {});
 
-    console.log("MongoDB connected successfully");
+    console.log("MongoDB connected successfully✅");
   } catch (error) {
     console.error("MongoDB connection error:", error.message);
     process.exit(1);

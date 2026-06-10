@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { email, z } from "zod";
 
 export const registerSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -27,3 +27,13 @@ export const registerSchema = z.object({
   );
 
 
+export const loginSchema = z.object({
+ email: z.string().email("Invalid email address"),
+   password: z
+    .string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(
+      /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])/,
+      "Password must contain uppercase, lowercase, number and special character",
+    ),
+})
