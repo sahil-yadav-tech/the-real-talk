@@ -1,15 +1,19 @@
 import React from "react";
 import { useState } from "react";
 import { loginUser } from "../api/authApi";
-import { Link } from "react-router-dom";
+import { Link, redirect } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { loginSuccess } from "../features/auth/authSlice";
 
 const Login = () => {
+  const navigate = useNavigate();
+    const dispatch = useDispatch();
   const [user, setUser] = useState({
     email: "",
     password: "",
   });
   const handleOnchange = (e) => {
-    console.log(e.target.value, e.target.value);
     const { name, value } = e.target;
     setUser((prev) => ({
       ...prev,
@@ -23,6 +27,11 @@ const Login = () => {
       const data = await loginUser(user);
 
       console.log("Login Success:", data);
+
+      if(data.success){
+        dispatch(loginSuccess(data.user))
+        navigate("/home")
+      }
     } catch (error) {
       console.log(error, "error");
 
