@@ -20,25 +20,27 @@ const Footer = () => {
 
   return (
     <footer className="bg-black border-t border-white/10 mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        {/* Main Footer Content */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-8">
-          {/* Logo Section */}
+          
+          {/* Brand Section */}
           <div>
-            <h3 className="text-white font-bold text-xl mb-3">Lumina</h3>
-            <p className="text-gray-500 text-sm">
+            <h3 className="text-white font-bold text-2xl mb-3">Verse</h3>
+            <p className="text-gray-400 text-sm leading-relaxed">
               Modern solutions for modern problems.
             </p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-white font-semibold mb-3">Quick Links</h4>
+            <h4 className="text-white font-semibold text-lg mb-3">Quick Links</h4>
             <ul className="space-y-2">
               {quickLinks.map((link) => (
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-gray-500 hover:text-white text-sm transition-colors"
+                    className="text-gray-400 hover:text-white text-sm transition-colors duration-200"
                   >
                     {link.name}
                   </a>
@@ -49,13 +51,13 @@ const Footer = () => {
 
           {/* Support */}
           <div>
-            <h4 className="text-white font-semibold mb-3">Support</h4>
+            <h4 className="text-white font-semibold text-lg mb-3">Support</h4>
             <ul className="space-y-2">
               {supportLinks.map((link) => (
                 <li key={link.name}>
                   <a
                     href={link.href}
-                    className="text-gray-500 hover:text-white text-sm transition-colors"
+                    className="text-gray-400 hover:text-white text-sm transition-colors duration-200"
                   >
                     {link.name}
                   </a>
@@ -66,11 +68,11 @@ const Footer = () => {
 
           {/* Contact Info */}
           <div>
-            <h4 className="text-white font-semibold mb-3">Contact</h4>
-            <div className="space-y-2 text-gray-500 text-sm">
-              <p>Email: hello@lumina.com</p>
+            <h4 className="text-white font-semibold text-lg mb-3">Contact</h4>
+            <div className="space-y-2 text-gray-400 text-sm">
+              <p className="break-words">Email: hello@lumina.com</p>
               <p>Phone: +1 (555) 123-4567</p>
-              <p>Address: 123 Innovation Street</p>
+              <p className="break-words">Address: 123 Innovation Street</p>
             </div>
           </div>
         </div>
