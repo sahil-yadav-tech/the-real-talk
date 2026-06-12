@@ -1,4 +1,4 @@
-# 💬 Chat Engine - Enterprise Grade Messaging Platform
+# 💬 Chat Engine - Enterprise Grade Messaging Platform (Project Under Maintaince)
 
 A production-ready, microservices-based chat application that combines the best features of WhatsApp, Discord, and Slack. Built for scalability, real-time communication, and enterprise-level performance.
 
