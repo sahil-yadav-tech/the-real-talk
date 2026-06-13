@@ -3,7 +3,7 @@ import "dotenv/config";
 import app from "./src/app.js";
 import connectDB from "./src/config/db.js";
 import redis from "./src/config/redis.config.js";
-
+import mongoose from "mongoose"
 const PORT = process.env.PORT
 
 // Boot sequence

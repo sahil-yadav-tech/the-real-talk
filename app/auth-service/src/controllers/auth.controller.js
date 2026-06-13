@@ -1,72 +1,19 @@
 import bcrypt from "bcryptjs";
 import User from "../models/user.model.js";
 import jwt from "jsonwebtoken";
+
+//!NOTE:replace import  "@common/errors/AppError.js"
+import AppError from "../../../../packages/common/errors/AppError.js";
+
 if (!process.env.JWT_SECRET) {
-  throw new Error("JWT is not defined");
+  throw new AppError("JWT is not defined");
 }
 
 export const register = async (req, res) => {
-  // console.log(req.body, "Body In register");
+  console.log(req.body, "Body In register");
 
   try {
-    const {
-      firstName,
-      lastName,
-      username,
-      email,
-      phone,
-      password,
-      gender,
-      confirmPassword,
-    } = req.body;
-
-    /*
-    Validations
-    */
-    const existingUser = await User.findOne({
-      $or: [{ email }, { username }, { phone }],
-    });
-
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "User already exists",
-      });
-    }
-
-    if (password !== confirmPassword) {
-      return res.status(400).json({
-        success: false,
-        message: "Confirm password and password dont match",
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await User.create({
-      firstName,
-      lastName,
-      username,
-      email,
-      phone,
-      password: hashedPassword,
-      gender,
-      //   dateOfBirth,
-    });
-
-    return res.status(201).json({
-      success: true,
-      message: "User registered successfully",
-      user,
-    });
-  } catch (error) {
-    console.log(error, "error");
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
+  } catch (error) {}
 };
 
 export const login = async (req, res) => {
