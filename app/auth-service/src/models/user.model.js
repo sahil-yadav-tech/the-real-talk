@@ -1,12 +1,25 @@
 import mongoose from "mongoose";
 import validator from "validator";
 
+const imageSchema = new mongoose.Schema(
+  {
+    url: {
+      type: String,
+      default: "",
+    },
+    publicId: {
+      type: String,
+      default: "",
+    },
+  },
+  { _id: false },
+);
+
 const userSchema = new mongoose.Schema(
   {
-    // Basic Information
     firstName: {
       type: String,
-      required: [true, "First name is required"],
+      required: true,
       trim: true,
       minlength: 2,
       maxlength: 50,
@@ -21,24 +34,22 @@ const userSchema = new mongoose.Schema(
 
     username: {
       type: String,
-      trim: true,
+      required: true,
       unique: true,
-      sparse: true,
       lowercase: true,
+      trim: true,
       minlength: 3,
       maxlength: 30,
+      index: true,
     },
 
     email: {
       type: String,
-      required: [true, "Email is required"],
+      required: true,
       unique: true,
       lowercase: true,
       trim: true,
-      validate: {
-        validator: validator.isEmail,
-        message: "Invalid email address",
-      },
+      validate: [validator.isEmail, "Invalid email"],
     },
 
     password: {
@@ -48,15 +59,20 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
 
-    // Profile
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
+
     profilePicture: {
-      url: String,
-      publicId: String,
+      type: imageSchema,
+      default: () => ({}),
     },
 
     coverPhoto: {
-      url: String,
-      publicId: String,
+      type: imageSchema,
+      default: () => ({}),
     },
 
     bio: {
@@ -65,23 +81,23 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
-    dateOfBirth: {
-      type: Date,
-    },
+    dateOfBirth: Date,
 
     gender: {
       type: String,
       enum: ["male", "female", "other"],
     },
 
-    // Contact Information
     phoneNumber: {
       type: String,
       unique: true,
       sparse: true,
+      validate: {
+        validator: (value) => !value || validator.isMobilePhone(value, "any"),
+        message: "Invalid phone number",
+      },
     },
 
-    // Verification
     isEmailVerified: {
       type: Boolean,
       default: false,
@@ -92,30 +108,6 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
 
-    // User Status
-    status: {
-      type: String,
-      enum: [
-        "Available",
-        "Busy",
-        "At work",
-        "In meeting",
-        "Offline",
-      ],
-      default: "Available",
-    },
-
-    isOnline: {
-      type: Boolean,
-      default: false,
-    },
-
-    lastSeen: {
-      type: Date,
-      default: null,
-    },
-
-    // Privacy Settings
     privacy: {
       lastSeen: {
         type: String,
@@ -136,43 +128,33 @@ const userSchema = new mongoose.Schema(
       },
     },
 
-    // Push Notification
-    fcmTokens: [
-      {
-        type: String,
-      },
-    ],
-
-    // Blocked Users
-    blockedUsers: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
-
-    // Devices
-    devices: [
-      {
-        deviceId: String,
-        deviceName: String,
-        lastActive: Date,
-      },
-    ],
-
-    // Authentication
-    refreshTokenVersion: {
-      type: Number,
-      default: 0,
-    },
-
     role: {
       type: String,
       enum: ["user", "admin"],
       default: "user",
     },
 
-    // Soft Delete
+    accountStatus: {
+      type: String,
+      enum: ["active", "suspended", "banned", "deactivated"],
+      default: "active",
+    },
+
+    loginAttempts: {
+      type: Number,
+      default: 0,
+    },
+
+    lockedUntil: {
+      type: Date,
+      default: null,
+    },
+
+    lastLoginAt: {
+      type: Date,
+      default: null,
+    },
+
     isDeleted: {
       type: Boolean,
       default: false,
@@ -185,13 +167,12 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-// Indexes
-// userSchema.index({ email: 1 });
-userSchema.index({ isOnline: 1 });
+userSchema.index({ email: 1 });
+userSchema.index({ username: 1 });
+userSchema.index({ phoneNumber: 1 });
+userSchema.index({ isDeleted: 1 });
 
-const User = mongoose.model("User", userSchema);
-
-export default User;
+export default mongoose.model("User", userSchema);

@@ -1,297 +1,204 @@
-import { useState } from "react";
-import axios from "axios"
-export default function Register() {
-const [formData, setFormData] = useState({
-firstName: "",
-lastName: "",
-username: "",
-email: "",
-phone: "",
-gender: "",
-password: "",
-confirmPassword: "",
-});
+import React, { useState } from "react";
 
-const [errors, setErrors] = useState({});
+const Register = () => {
+  const [showForm, setShowForm] = useState(true);
 
-const handleChange = (e) => {
-setFormData((prev) => ({
-...prev,
-[e.target.name]: e.target.value,
-}));
-
-setErrors((prev) => ({
-  ...prev,
-  [e.target.name]: "",
-}));
-
-};
-
-const validateForm = () => {
-const newErrors = {};
-
-if (!formData.firstName.trim()) {
-  newErrors.firstName = "First name is required";
-}
-
-if (!formData.lastName.trim()) {
-  newErrors.lastName = "Last name is required";
-}
-
-if (!formData.username.trim()) {
-  newErrors.username = "Username is required";
-} else if (formData.username.length < 4) {
-  newErrors.username =
-    "Username must be at least 4 characters";
-}
-
-if (!formData.email.trim()) {
-  newErrors.email = "Email is required";
-} else if (
-  !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-    formData.email
-  )
-) {
-  newErrors.email = "Invalid email";
-}
-
-if (!formData.phone.trim()) {
-  newErrors.phone = "Phone is required";
-} else if (
-  !/^[0-9]{10}$/.test(formData.phone)
-) {
-  newErrors.phone =
-    "Phone must contain 10 digits";
-}
-
-if (!formData.gender) {
-  newErrors.gender = "Please select gender";
-}
-
-if (!formData.password) {
-  newErrors.password = "Password required";
-} else if (formData.password.length < 8) {
-  newErrors.password =
-    "Password must be at least 8 characters";
-}
-
-if (!formData.confirmPassword) {
-  newErrors.confirmPassword =
-    "Confirm password required";
-} 
-else if (
-  formData.password !==
-  formData.confirmPassword
-) {
-  newErrors.confirmPassword =
-    "Passwords do not match";
-}
-
-return newErrors;
-
-};
-
-const handleSubmit = async (e) => {
-e.preventDefault();
-
-const validationErrors =
-  validateForm();
-
-if (
-  Object.keys(validationErrors).length > 0
-) {
-  setErrors(validationErrors);
-  return;
-}
-
-try {
-  console.log(formData);
-
-  // API CALL
-
-  await axios.post(
-    "http://localhost:9876/api/auth/register",
-    formData
-  );
-
-  alert("Registration Successful");
-
-  setFormData({
+  const [userData, setUserData] = useState({
     firstName: "",
     lastName: "",
     username: "",
     email: "",
-    phone: "",
-    gender: "",
     password: "",
-    confirmPassword: "",
+    dateOfBirth: "",
+    gender: "",
+    phoneNumber: "",
+    role: "",
   });
-} catch (error) {
-  console.log(error);
-}
 
+  const HandleChanges = () => {};
+
+  const inputStyle =
+    "w-full bg-[#1F1F1F] text-white px-5 py-4 rounded-2xl outline-none border border-transparent focus:border-[#FABD02] transition-all duration-300 placeholder:text-gray-400";
+
+  return (
+    <div className="min-h-screen bg-black text-white flex">
+      {/* Left Side */}
+      <div className="hidden lg:flex w-1/2 items-center justify-center p-10">
+        <div className="max-w-xl">
+          <img
+            src="./registerlogoreal.png"
+            alt="Video Call"
+            className="rounded-3xl shadow-2xl"
+          />
+
+         
+        </div>
+      </div>
+
+      {/* Right Side */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center px-6 py-10">
+        <div className="w-full max-w-2xl">
+          {/* Tabs */}
+          <div className="flex justify-center mb-12">
+            <div className="bg-[#1F1F1F] p-1 rounded-full flex">
+              <button
+                className={`px-8 py-3 rounded-full transition-all duration-300 ${
+                  showForm
+                    ? "bg-[#FABD02] text-black font-semibold shadow-[0_0_20px_rgba(250,189,2,0.5)]"
+                    : "text-gray-400"
+                }`}
+                onClick={() => setShowForm(true)}
+              >
+                Sign Up
+              </button>
+
+              <button
+                className={`px-8 py-3 rounded-full transition-all duration-300 ${
+                  !showForm
+                    ? "bg-[#FABD02] text-black font-semibold shadow-[0_0_20px_rgba(250,189,2,0.5)]"
+                    : "text-gray-400"
+                }`}
+                onClick={() => setShowForm(false)}
+              >
+                Log In
+              </button>
+            </div>
+          </div>
+
+          {/* Form */}
+          <h2 className="text-center text-5xl font-semibold mb-10">
+            Create An Account
+          </h2>
+
+          {/* First Name + Last Name */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <input
+              type="text"
+              name="firstName"
+              placeholder="First Name"
+              onChange={HandleChanges}
+              className={inputStyle}
+            />
+
+            <input
+              type="text"
+              name="lastName"
+              placeholder="Last Name"
+              onChange={HandleChanges}
+              className={inputStyle}
+            />
+          </div>
+
+          {/* Username */}
+          <input
+            type="text"
+            name="username"
+            placeholder="Username"
+            onChange={HandleChanges}
+            className={`${inputStyle} mb-4`}
+          />
+
+          {/* Email */}
+          <input
+            type="email"
+            name="email"
+            placeholder="Enter Your Email"
+            onChange={HandleChanges}
+            className={`${inputStyle} mb-4`}
+          />
+
+          {/* Password */}
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            onChange={HandleChanges}
+            className={`${inputStyle} mb-4`}
+          />
+
+          {/* Date Of Birth */}
+          <input
+            type="date"
+            name="dateOfBirth"
+            onChange={HandleChanges}
+            className={`${inputStyle} mb-4`}
+          />
+
+          {/* Gender */}
+          <select
+            name="gender"
+            onChange={HandleChanges}
+            className={`${inputStyle} mb-4`}
+          >
+            <option value="">Select Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+          </select>
+
+          {/* Phone Number */}
+          <input
+            type="tel"
+            name="phoneNumber"
+            placeholder="Phone Number"
+            onChange={HandleChanges}
+            className={`${inputStyle} mb-4`}
+          />
+
+          {/* Role */}
+          <select
+            name="role"
+            onChange={HandleChanges}
+            className={`${inputStyle} mb-8`}
+          >
+            <option value="">Select Role</option>
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+          </select>
+
+          {/* Button */}
+          <button
+            className="
+              w-full
+              bg-[#FABD02]
+              text-black
+              font-semibold
+              py-4
+              rounded-2xl
+              transition-all
+              duration-300
+              hover:scale-[1.02]
+              shadow-[0_0_25px_rgba(250,189,2,0.6)]
+            "
+          >
+            Create an Account
+          </button>
+
+          {/* Divider */}
+          <div className="flex items-center my-8">
+            <div className="flex-1 h-[1px] bg-gray-800"></div>
+            <span className="px-4 text-gray-400">Or</span>
+            <div className="flex-1 h-[1px] bg-gray-800"></div>
+          </div>
+
+          {/* Social Buttons */}
+          <div className="grid grid-cols-3 gap-4">
+            <button className="bg-[#1F1F1F] py-4 rounded-2xl hover:bg-[#2a2a2a] transition">
+              Google
+            </button>
+
+            <button className="bg-[#1F1F1F] py-4 rounded-2xl hover:bg-[#2a2a2a] transition">
+              Facebook
+            </button>
+
+            <button className="bg-[#1F1F1F] py-4 rounded-2xl hover:bg-[#2a2a2a] transition">
+              Apple
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
-return ( <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4"> <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-8"> <h1 className="text-3xl font-bold text-center mb-8">
-Create Account </h1>
-
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-5"
-    >
-      <div className="grid md:grid-cols-2 gap-4">
-        <div>
-          <input
-            type="text"
-            name="firstName"
-            placeholder="First Name"
-            value={formData.firstName}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-3"
-          />
-          {errors.firstName && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.firstName}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <input
-            type="text"
-            name="lastName"
-            placeholder="Last Name"
-            value={formData.lastName}
-            onChange={handleChange}
-            className="w-full border rounded-lg p-3"
-          />
-          {errors.lastName && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.lastName}
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div>
-        <input
-          type="text"
-          name="username"
-          placeholder="Username"
-          value={formData.username}
-          onChange={handleChange}
-          className="w-full border rounded-lg p-3"
-        />
-        {errors.username && (
-          <p className="text-red-500 text-sm mt-1">
-            {errors.username}
-          </p>
-        )}
-      </div>
-
-      <div>
-        <input
-          type="email"
-          name="email"
-          placeholder="Email Address"
-          value={formData.email}
-          onChange={handleChange}
-          className="w-full border rounded-lg p-3"
-        />
-        {errors.email && (
-          <p className="text-red-500 text-sm mt-1">
-            {errors.email}
-          </p>
-        )}
-      </div>
-
-      <div>
-        <input
-          type="text"
-          name="phone"
-          placeholder="Phone Number"
-          value={formData.phone}
-          onChange={handleChange}
-          className="w-full border rounded-lg p-3"
-        />
-        {errors.phone && (
-          <p className="text-red-500 text-sm mt-1">
-            {errors.phone}
-          </p>
-        )}
-      </div>
-
-      <div>
-        <select
-          name="gender"
-          value={formData.gender}
-          onChange={handleChange}
-          className="w-full border rounded-lg p-3"
-        >
-          <option value="">
-            Select Gender
-          </option>
-          <option value="male">
-            Male
-          </option>
-          <option value="female">
-            Female
-          </option>
-          <option value="other">
-            Other
-          </option>
-        </select>
-
-        {errors.gender && (
-          <p className="text-red-500 text-sm mt-1">
-            {errors.gender}
-          </p>
-        )}
-      </div>
-
-      <div>
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          className="w-full border rounded-lg p-3"
-        />
-
-        {errors.password && (
-          <p className="text-red-500 text-sm mt-1">
-            {errors.password}
-          </p>
-        )}
-      </div>
-
-      <div>
-        <input
-          type="password"
-          name="confirmPassword"
-          placeholder="Confirm Password"
-          value={formData.confirmPassword}
-          onChange={handleChange}
-          className="w-full border rounded-lg p-3"
-        />
-
-        {errors.confirmPassword && (
-          <p className="text-red-500 text-sm mt-1">
-            {errors.confirmPassword}
-          </p>
-        )}
-      </div>
-
-      <button
-        type="submit"
-        className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700"
-      >
-        Register
-      </button>
-    </form>
-  </div>
-</div>
-
-);
-}
+export default Register;
