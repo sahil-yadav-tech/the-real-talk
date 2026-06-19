@@ -1,277 +1,280 @@
-// app/backend/src/services/auth.service.js
+// // app/backend/src/services/auth.service.js
 
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import crypto from 'crypto';
+import BadRequestError from "../../../../packages/common/errors/BadRequestError.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import crypto from "crypto";
+
 import {
   findByEmail,
-  createUser,
-  findById,
-  updateUser,
-  updatePassword,
-  updateLastLogin
-} from '../repositories/user.repository.js';
-import { 
-  AppError, 
-  BadRequestError, 
-  UnauthorizedError,
-  NotFoundError 
-} from '../../../../packages/common/errors/index.js';
+  // createUser,
+  // findById,
+  // updateUser,
+  // updatePassword,
+  // updateLastLogin
+} from "../repositories/user.repository.js";
+// import BadRequestError from '../../../../packages/common/errors/BadRequestError.js';
 
-/**
- * Register new user service
- */
 export const registerService = async (userData) => {
   const { email, password, firstName, lastName } = userData;
 
   // Check if user exists
   const existingUser = await findByEmail(email);
+  console.log(existingUser, "existingUser ");
+
   if (existingUser) {
-    throw new BadRequestError('User already exists with this email');
+    throw new BadRequestError("User already exists with this email");
   }
 
   // Hash password
   const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 10;
   const hashedPassword = await bcrypt.hash(password, saltRounds);
+  console.log(saltRounds, hashedPassword);
 
-  // Create user
-  const user = await createUser({
-    firstName,
-    lastName,
-    email: email.toLowerCase(),
-    password: hashedPassword,
-    emailVerificationToken: generateVerificationToken(),
-    emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
-  });
+  process.exit();
 
-  // Generate token
-  const token = generateToken(user._id);
+  //   // Create user
+  //   const user = await createUser({
+  //     firstName,
+  //     lastName,
+  //     email: email.toLowerCase(),
+  //     password: hashedPassword,
+  //     emailVerificationToken: generateVerificationToken(),
+  //     emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+  //   });
 
-  // Generate refresh token
-  const refreshToken = generateRefreshToken(user._id);
+  //   // Generate token
+  //   const token = generateToken(user._id);
 
-  // Send verification email (async - don't await)
-  sendVerificationEmail(user.email, user.emailVerificationToken).catch(err => {
-    logger.error(`Failed to send verification email: ${err.message}`);
-  });
+  //   // Generate refresh token
+  //   const refreshToken = generateRefreshToken(user._id);
 
-  logger.info(`User registered: ${email}`);
+  //   // Send verification email (async - don't await)
+  //   sendVerificationEmail(user.email, user.emailVerificationToken).catch(err => {
+  //     // logger.error(`Failed to send verification email: ${err.message}`);
+  //   });
 
-  return {
-    user: sanitizeUser(user),
-    token,
-    refreshToken
-  };
+  // //   logger.info(`User registered: ${email}`);
+
+  //   return {
+  //     user: sanitizeUser(user),
+  //     token,
+  //     refreshToken
+  //   };
 };
 
-/**
- * Login user service
- */
-export const loginService = async (credentials) => {
-  const { email, password } = credentials;
+// /**
+//  * Register new user service
+//  */
 
-  // Find user with password
-  const user = await findByEmail(email, true);
-  if (!user) {
-    throw new UnauthorizedError('Invalid credentials');
-  }
+// // /**
+// //  * Login user service
+// //  */
+// // export const loginService = async (credentials) => {
+// //   const { email, password } = credentials;
 
-  // Check if account is locked
-  if (user.isLocked && user.lockUntil > Date.now()) {
-    throw new BadRequestError('Account is temporarily locked. Please try again later');
-  }
+// //   // Find user with password
+// //   const user = await findByEmail(email, true);
+// //   if (!user) {
+// //     throw new UnauthorizedError('Invalid credentials');
+// //   }
 
-  // Verify password
-  const isPasswordValid = await bcrypt.compare(password, user.password);
-  if (!isPasswordValid) {
-    // Increment failed login attempts
-    await incrementFailedAttempts(user._id);
-    throw new UnauthorizedError('Invalid credentials');
-  }
+// //   // Check if account is locked
+// //   if (user.isLocked && user.lockUntil > Date.now()) {
+// //     throw new BadRequestError('Account is temporarily locked. Please try again later');
+// //   }
 
-  // Reset failed attempts on successful login
-  await resetFailedAttempts(user._id);
+// //   // Verify password
+// //   const isPasswordValid = await bcrypt.compare(password, user.password);
+// //   if (!isPasswordValid) {
+// //     // Increment failed login attempts
+// //     await incrementFailedAttempts(user._id);
+// //     throw new UnauthorizedError('Invalid credentials');
+// //   }
 
-  // Check if email is verified
-  if (!user.isEmailVerified) {
-    // Resend verification email
-    await resendVerificationEmail(user);
-    throw new BadRequestError('Please verify your email. A new verification link has been sent.');
-  }
+// //   // Reset failed attempts on successful login
+// //   await resetFailedAttempts(user._id);
 
-  // Generate tokens
-  const token = generateToken(user._id);
-  const refreshToken = generateRefreshToken(user._id);
+// //   // Check if email is verified
+// //   if (!user.isEmailVerified) {
+// //     // Resend verification email
+// //     await resendVerificationEmail(user);
+// //     throw new BadRequestError('Please verify your email. A new verification link has been sent.');
+// //   }
 
-  // Update last login
-  await updateLastLogin(user._id);
+// //   // Generate tokens
+// //   const token = generateToken(user._id);
+// //   const refreshToken = generateRefreshToken(user._id);
 
-  logger.info(`User logged in: ${email}`);
+// //   // Update last login
+// //   await updateLastLogin(user._id);
 
-  return {
-    user: sanitizeUser(user),
-    token,
-    refreshToken
-  };
-};
+// // //   logger.info(`User logged in: ${email}`);
 
-/**
- * Refresh token service
- */
-export const refreshTokenService = async (refreshToken) => {
-  try {
-    const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
-    const user = await findById(decoded.userId);
-    
-    if (!user) {
-      throw new UnauthorizedError('Invalid refresh token');
-    }
+// //   return {
+// //     user: sanitizeUser(user),
+// //     token,
+// //     refreshToken
+// //   };
+// // };
 
-    const newToken = generateToken(user._id);
-    const newRefreshToken = generateRefreshToken(user._id);
+// // /**
+// //  * Refresh token service
+// //  */
+// // export const refreshTokenService = async (refreshToken) => {
+// //   try {
+// //     const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
+// //     const user = await findById(decoded.userId);
 
-    return {
-      user: sanitizeUser(user),
-      token: newToken,
-      refreshToken: newRefreshToken
-    };
-  } catch (error) {
-    throw new UnauthorizedError('Invalid or expired refresh token');
-  }
-};
+// //     if (!user) {
+// //       throw new UnauthorizedError('Invalid refresh token');
+// //     }
 
-/**
- * Verify email service
- */
-export const verifyEmailService = async (token) => {
-  const user = await findUserByVerificationToken(token);
-  
-  if (!user) {
-    throw new BadRequestError('Invalid verification token');
-  }
+// //     const newToken = generateToken(user._id);
+// //     const newRefreshToken = generateRefreshToken(user._id);
 
-  if (user.emailVerificationExpires < Date.now()) {
-    throw new BadRequestError('Verification token has expired');
-  }
+// //     return {
+// //       user: sanitizeUser(user),
+// //       token: newToken,
+// //       refreshToken: newRefreshToken
+// //     };
+// //   } catch (error) {
+// //     throw new UnauthorizedError('Invalid or expired refresh token');
+// //   }
+// // };
 
-  await verifyUserEmail(user._id);
+// // /**
+// //  * Verify email service
+// //  */
+// // export const verifyEmailService = async (token) => {
+// //   const user = await findUserByVerificationToken(token);
 
-  return { message: 'Email verified successfully' };
-};
+// //   if (!user) {
+// //     throw new BadRequestError('Invalid verification token');
+// //   }
 
-/**
- * Forgot password service
- */
-export const forgotPasswordService = async (email) => {
-  const user = await findByEmail(email);
-  
-  if (!user) {
-    // Don't reveal if email exists or not (security)
-    return { message: 'If an account exists, a reset link will be sent' };
-  }
+// //   if (user.emailVerificationExpires < Date.now()) {
+// //     throw new BadRequestError('Verification token has expired');
+// //   }
 
-  const resetToken = generateResetToken();
-  const resetExpires = Date.now() + 3600000; // 1 hour
+// //   await verifyUserEmail(user._id);
 
-  await updateUser(user._id, {
-    resetPasswordToken: resetToken,
-    resetPasswordExpires: resetExpires
-  });
+// //   return { message: 'Email verified successfully' };
+// // };
 
-  // Send reset email (async)
-  sendPasswordResetEmail(user.email, resetToken).catch(err => {
-    logger.error(`Failed to send reset email: ${err.message}`);
-  });
+// // /**
+// //  * Forgot password service
+// //  */
+// // export const forgotPasswordService = async (email) => {
+// //   const user = await findByEmail(email);
 
-  return { message: 'Password reset link sent to your email' };
-};
+// //   if (!user) {
+// //     // Don't reveal if email exists or not (security)
+// //     return { message: 'If an account exists, a reset link will be sent' };
+// //   }
 
-/**
- * Reset password service
- */
-export const resetPasswordService = async (token, newPassword) => {
-  const user = await findUserByResetToken(token);
-  
-  if (!user) {
-    throw new BadRequestError('Invalid reset token');
-  }
+// //   const resetToken = generateResetToken();
+// //   const resetExpires = Date.now() + 3600000; // 1 hour
 
-  if (user.resetPasswordExpires < Date.now()) {
-    throw new BadRequestError('Reset token has expired');
-  }
+// //   await updateUser(user._id, {
+// //     resetPasswordToken: resetToken,
+// //     resetPasswordExpires: resetExpires
+// //   });
 
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
+// //   // Send reset email (async)
+// //   sendPasswordResetEmail(user.email, resetToken).catch(err => {
+// //     // logger.error(`Failed to send reset email: ${err.message}`);
+// //   });
 
-  await updatePassword(user._id, hashedPassword);
-  await clearResetToken(user._id);
+// //   return { message: 'Password reset link sent to your email' };
+// // };
 
-  return { message: 'Password reset successfully' };
-};
+// // /**
+// //  * Reset password service
+// //  */
+// // export const resetPasswordService = async (token, newPassword) => {
+// //   const user = await findUserByResetToken(token);
 
-/**
- * Change password service
- */
-export const changePasswordService = async (userId, currentPassword, newPassword) => {
-  const user = await findById(userId, true);
-  
-  if (!user) {
-    throw new NotFoundError('User not found');
-  }
+// //   if (!user) {
+// //     throw new BadRequestError('Invalid reset token');
+// //   }
 
-  const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
-  if (!isPasswordValid) {
-    throw new BadRequestError('Current password is incorrect');
-  }
+// //   if (user.resetPasswordExpires < Date.now()) {
+// //     throw new BadRequestError('Reset token has expired');
+// //   }
 
-  const hashedPassword = await bcrypt.hash(newPassword, 10);
-  await updatePassword(userId, hashedPassword);
+// //   const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-  logger.info(`Password changed for user: ${user.email}`);
+// //   await updatePassword(user._id, hashedPassword);
+// //   await clearResetToken(user._id);
 
-  return { message: 'Password changed successfully' };
-};
+// //   return { message: 'Password reset successfully' };
+// // };
 
-/**
- * Generate JWT token
- */
-export const generateToken = (userId) => {
-  return jwt.sign(
-    { userId },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-  );
-};
+// // /**
+// //  * Change password service
+// //  */
+// // export const changePasswordService = async (userId, currentPassword, newPassword) => {
+// //   const user = await findById(userId, true);
 
-/**
- * Generate refresh token
- */
-export const generateRefreshToken = (userId) => {
-  return jwt.sign(
-    { userId },
-    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
-    { expiresIn: '30d' }
-  );
-};
+// //   if (!user) {
+// //     throw new NotFoundError('User not found');
+// //   }
 
-/**
- * Generate verification token
- */
-export const generateVerificationToken = () => {
-  return crypto.randomBytes(32).toString('hex');
-};
+// //   const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+// //   if (!isPasswordValid) {
+// //     throw new BadRequestError('Current password is incorrect');
+// //   }
 
-/**
- * Generate reset token
- */
-export const generateResetToken = () => {
-  return crypto.randomBytes(32).toString('hex');
-};
+// //   const hashedPassword = await bcrypt.hash(newPassword, 10);
+// //   await updatePassword(userId, hashedPassword);
 
-/**
- * Sanitize user object (remove sensitive data)
- */
-export const sanitizeUser = (user) => {
-  const userObj = user.toObject ? user.toObject() : { ...user };
-  const { password, __v, resetPasswordToken, resetPasswordExpires, emailVerificationToken, emailVerificationExpires, ...sanitized } = userObj;
-  return sanitized;
-};
+// // //   logger.info(`Password changed for user: ${user.email}`);
+
+// //   return { message: 'Password changed successfully' };
+// // };
+
+// // /**
+// //  * Generate JWT token
+// //  */
+// // export const generateToken = (userId) => {
+// //   return jwt.sign(
+// //     { userId },
+// //     process.env.JWT_SECRET,
+// //     { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+// //   );
+// // };
+
+// // /**
+// //  * Generate refresh token
+// //  */
+// // export const generateRefreshToken = (userId) => {
+// //   return jwt.sign(
+// //     { userId },
+// //     process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+// //     { expiresIn: '30d' }
+// //   );
+// // };
+
+// // /**
+// //  * Generate verification token
+// //  */
+// // export const generateVerificationToken = () => {
+// //   return crypto.randomBytes(32).toString('hex');
+// // };
+
+// // /**
+// //  * Generate reset token
+// //  */
+// // export const generateResetToken = () => {
+// //   return crypto.randomBytes(32).toString('hex');
+// // };
+
+// // /**
+// //  * Sanitize user object (remove sensitive data)
+// //  */
+// // export const sanitizeUser = (user) => {
+// //   const userObj = user.toObject ? user.toObject() : { ...user };
+// //   const { password, __v, resetPasswordToken, resetPasswordExpires, emailVerificationToken, emailVerificationExpires, ...sanitized } = userObj;
+// //   return sanitized;
+// // };
