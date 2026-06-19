@@ -9,13 +9,21 @@ const Register = () => {
     username: "",
     email: "",
     password: "",
-    dateOfBirth: "",
     gender: "",
     phoneNumber: "",
     role: "",
   });
 
-  const HandleChanges = () => {};
+  const HandleChanges = (e) => {
+    const { name, value } = e.target;
+
+    console.log(name, value, "name value");
+
+    setUserData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   const inputStyle =
     "w-full bg-[#1F1F1F] text-white px-5 py-4 rounded-2xl outline-none border border-transparent focus:border-[#FABD02] transition-all duration-300 placeholder:text-gray-400";
@@ -30,8 +38,6 @@ const Register = () => {
             alt="Video Call"
             className="rounded-3xl shadow-2xl"
           />
-
-         
         </div>
       </div>
 
@@ -69,7 +75,6 @@ const Register = () => {
           <h2 className="text-center text-5xl font-semibold mb-10">
             Create An Account
           </h2>
-
           {/* First Name + Last Name */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <input
@@ -78,6 +83,7 @@ const Register = () => {
               placeholder="First Name"
               onChange={HandleChanges}
               className={inputStyle}
+              value={userData.firstName}
             />
 
             <input
@@ -86,6 +92,7 @@ const Register = () => {
               placeholder="Last Name"
               onChange={HandleChanges}
               className={inputStyle}
+              value={userData.lastName}
             />
           </div>
 
@@ -96,6 +103,7 @@ const Register = () => {
             placeholder="Username"
             onChange={HandleChanges}
             className={`${inputStyle} mb-4`}
+            value={userData.username}
           />
 
           {/* Email */}
@@ -105,6 +113,7 @@ const Register = () => {
             placeholder="Enter Your Email"
             onChange={HandleChanges}
             className={`${inputStyle} mb-4`}
+            value={userData.email}
           />
 
           {/* Password */}
@@ -114,21 +123,17 @@ const Register = () => {
             placeholder="Password"
             onChange={HandleChanges}
             className={`${inputStyle} mb-4`}
-          />
+            value={userData.password}
+          />  
 
-          {/* Date Of Birth */}
-          <input
-            type="date"
-            name="dateOfBirth"
-            onChange={HandleChanges}
-            className={`${inputStyle} mb-4`}
-          />
+
 
           {/* Gender */}
           <select
             name="gender"
             onChange={HandleChanges}
             className={`${inputStyle} mb-4`}
+            value={userData.gender}
           >
             <option value="">Select Gender</option>
             <option value="male">Male</option>
@@ -143,6 +148,7 @@ const Register = () => {
             placeholder="Phone Number"
             onChange={HandleChanges}
             className={`${inputStyle} mb-4`}
+            value={userData.phoneNumber}
           />
 
           {/* Role */}
@@ -150,6 +156,7 @@ const Register = () => {
             name="role"
             onChange={HandleChanges}
             className={`${inputStyle} mb-8`}
+            value={userData.role}
           >
             <option value="">Select Role</option>
             <option value="user">User</option>
@@ -159,21 +166,20 @@ const Register = () => {
           {/* Button */}
           <button
             className="
-              w-full
-              bg-[#FABD02]
-              text-black
-              font-semibold
-              py-4
-              rounded-2xl
-              transition-all
-              duration-300
-              hover:scale-[1.02]
-              shadow-[0_0_25px_rgba(250,189,2,0.6)]
-            "
+    w-full
+    bg-[#FABD02]
+    text-black
+    font-semibold
+    py-4
+    rounded-2xl
+    transition-all
+    duration-300
+    hover:scale-[1.02]
+    shadow-[0_0_25px_rgba(250,189,2,0.6)]
+  "
           >
             Create an Account
           </button>
-
           {/* Divider */}
           <div className="flex items-center my-8">
             <div className="flex-1 h-[1px] bg-gray-800"></div>

@@ -7,12 +7,15 @@ const imageSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+
     publicId: {
       type: String,
       default: "",
     },
   },
-  { _id: false },
+  {
+    _id: false,
+  }
 );
 
 const userSchema = new mongoose.Schema(
@@ -40,7 +43,6 @@ const userSchema = new mongoose.Schema(
       trim: true,
       minlength: 3,
       maxlength: 30,
-      index: true,
     },
 
     email: {
@@ -81,7 +83,9 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
-    dateOfBirth: Date,
+    dateOfBirth: {
+      type: Date,
+    },
 
     gender: {
       type: String,
@@ -93,7 +97,8 @@ const userSchema = new mongoose.Schema(
       unique: true,
       sparse: true,
       validate: {
-        validator: (value) => !value || validator.isMobilePhone(value, "any"),
+        validator: (value) =>
+          !value || validator.isMobilePhone(value, "any"),
         message: "Invalid phone number",
       },
     },
@@ -167,12 +172,10 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  },
+  }
 );
 
-userSchema.index({ email: 1 });
-userSchema.index({ username: 1 });
-userSchema.index({ phoneNumber: 1 });
+// Keep ONLY indexes that are NOT already created by unique:true
 userSchema.index({ isDeleted: 1 });
 
 export default mongoose.model("User", userSchema);
