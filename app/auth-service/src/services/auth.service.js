@@ -31,7 +31,8 @@ export const registerService = async (userData) => {
   const hashedPassword = await bcrypt.hash(password, saltRounds);
   console.log(saltRounds, hashedPassword);
 
-  process.exit();
+
+  // STORE DETAILS IN REDIS
 
   //   // Create user
   //   const user = await createUser({
