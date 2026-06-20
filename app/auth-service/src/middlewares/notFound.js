@@ -1,7 +1,7 @@
 // auth-service/src/middlewares/notFound.js
 
 import NotFoundError from "../../../../packages/common/errors/NotFoundError.js";
-import logger from "../../../../packages/common/logger.js";
+import logger from "../../../../packages/common/logger/index.js";
 
 
 

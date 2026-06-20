@@ -1,17 +1,17 @@
 // auth-service/src/middlewares/errorHandler.js
-import {
-  AppError,
-  errorResponse,
-  BadRequestError,
-  UnauthorizedError,
-  ForbiddenError,
-  NotFoundError,
-  ValidationError,
-  ConflictError,
-  InternalServerError,
-} from"../../../../packages/common/response/sendResponse.js";
+import logger from "../../../../packages/common/logger/index.js";
+// import {
+//   errorResponse,
+//   // BadRequestError,
+//   UnauthorizedError,
+//   ForbiddenError,
+//   NotFoundError,
+//   ValidationError,
+//   // ConflictError,
+//   InternalServerError,
+// } from"../../../../packages/common/response/sendResponse.js";
 
-import logger from "../../../../packages/common/logger.js";
+// import errorResponse from"../../../../packages/common/response/sendResponse.js";
 
 /**
  * Global error handler for Auth Service

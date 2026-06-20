@@ -6,7 +6,7 @@ import compression from 'compression';
 import cookieParser from 'cookie-parser';
 
 import { config } from './config/index.js';
-import authRoutes from './routes/auth.routes.js';
+// import authRoutes from './routes/auth.routes.js';
 import { correlationId } from '../../../packages/common/middlewares/correlationId.js';
 import { notFoundHandler } from './middlewares/notFound.js';
 import { errorHandler } from './middlewares/errorHandler.js';
@@ -40,7 +40,7 @@ app.use(cookieParser());
 app.use(correlationId());
 
 // 6. Request logging (from common)
-app.use(requestLogger);
+// app.use(requestLogger);
 
 // ===== HEALTH CHECK =====
 app.get('/health', (req, res) => {
@@ -55,10 +55,10 @@ app.get('/health', (req, res) => {
 });
 
 // ===== API ROUTES =====
-app.use('/api/v1/auth', authRoutes);
+// app.use('/api/v1/auth', authRoutes);
 
 // ===== ERROR HANDLING (MUST BE LAST) =====
-app.use(notFoundHandler);  // 404 handler
-app.use(errorHandler);     // Global error handler
+// app.use(notFoundHandler);  // 404 handler
+// app.use(errorHandler);     // Global error handler
 
 export default app;
