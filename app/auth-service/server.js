@@ -4,12 +4,14 @@ import app from "./src/app.js";
 import connectDB from "./src/config/db.js";
 import redis from "./src/config/redis.config.js";
 import mongoose from "mongoose"
+import { connectRabbitMq } from "./src/config/rabbitmq.js";
 const PORT = process.env.PORT
 
 // Boot sequence
 const start = async () => {
   try {
     await connectDB();
+    await connectRabbitMq()
     // await redis();
     const server = app.listen(PORT, () => {
       console.log(`[server] Running on port ${PORT} 🚀`);
