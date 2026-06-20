@@ -5,6 +5,7 @@ import crypto from "crypto";
 import { findByEmail, findByPhone } from "../repositories/user.repository.js";
 import redis from "../config/redis.config.js";
 import { generateSimpleOtp } from "../../../../packages/common/utils/otpGenerator.js";
+import { publishEvent } from "../events/producers/Producer.js";
 
 export const registerService = async (userData) => {
   const { email, phoneNumber, password, firstName, lastName } = userData;
@@ -86,12 +87,12 @@ export const registerService = async (userData) => {
 
   // Publish event to RabbitMQ (non-blocking)
   try {
-    // await publishEvent('SEND_OTP', {
-    //   email: normalizedEmail,
-    //   otp,
-    //   type: 'REGISTER',
-    //   firstName: firstName.trim(),
-    // });
+    await publishEvent('SEND_OTP', {
+      email: normalizedEmail,
+      otp,
+      type: 'REGISTER',
+      firstName: firstName.trim(),
+    });
     console.info(`OTP event published for email: ${normalizedEmail}`);
   } catch (error) {
     console.error("Failed to publish OTP event:", error);

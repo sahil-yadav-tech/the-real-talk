@@ -76,17 +76,17 @@ export const getConfirmChannel = () => {
 export const setupProducer = async () => {
   const ch = getConfirmChannel();
 
-  await ch.assertExchange(EXCHANGES.ORDER, "topic", {
-    durable: true,
-  });
+  // await ch.assertExchange(EXCHANGES.ORDER, "topic", {
+  //   durable: true,
+  // });
 
   await ch.assertExchange(EXCHANGES.SEND_OTP, "topic", {
     durable: true,
   });
 
-  await ch.assertExchange(EXCHANGES.USER_OTP, "topic", {
-    durable: true,
-  });
+  // await ch.assertExchange(EXCHANGES.USER_OTP, "topic", {
+  //   durable: true,
+  // });
 
   console.log("All Exchanges Ready ✅");
 };
