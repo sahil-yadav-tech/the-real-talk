@@ -1,11 +1,15 @@
-// errors/BadRequestError.js
+// // errors/BadRequestError.js
 
-import AppError from "./AppError.js";
+// import  AppError  from "./AppError.js";
 
-class BadRequestError extends AppError {
-  constructor(message = "Bad Request") {
-    super(message, 400);
-  }
+
+// class BadRequestError extends AppError {
+//   constructor(message = "Bad Request") {
+//     super(message, 400);
+//   }
+// }
+const BadRequestError =() => {
+  
 }
 
 export default BadRequestError;

@@ -1,0 +1,20 @@
+{
+  "name": "@your-org/common",
+  "version": "1.0.0",
+  "description": "Shared utilities for microservices",
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    "./errors": "./errors/index.js",
+    "./response": "./response/sendResponse.js",
+    "./utils": "./utils/index.js",
+    "./logger": "./logger/index.js",
+    "./middlewares": "./middlewares/index.js",
+    "./validators": "./validators/index.js"
+  },
+  "dependencies": {
+    "winston": "^3.11.0",
+    "uuid": "^9.0.0",
+    "express-rate-limit": "^6.10.0"
+  }
+}

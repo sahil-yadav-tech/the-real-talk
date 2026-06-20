@@ -1,8 +1,5 @@
-// // app/backend/src/repositories/user.repository.js
 
 import User from '../models/user.model.js';
-// // import { logger } from '../../../../packages/common/logger/index.js';
-// import { NotFoundError } from '../../../../packages/common/errors/index.js';
 
 // /**
 //  * Find user by email
@@ -22,6 +19,167 @@ export const findByEmail = async (email, includePassword = false) => {
     throw error;
   }
 };
+
+export const findByPhone = async (phoneNumber, includePassword = false) => {
+  console.log(phoneNumber, "phoneNumber");
+  
+  try {
+    const query = User.findOne({ phoneNumber: "9876543210" });
+    
+    if (!includePassword) {
+      query.select('-password');
+    }
+    return await query;
+  } catch (error) {
+    // logger.error(`Error finding user by email: ${error.message}`);
+    throw error;
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 // /**
 //  * Find user by ID
