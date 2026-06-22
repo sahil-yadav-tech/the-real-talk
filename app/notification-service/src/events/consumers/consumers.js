@@ -1,5 +1,6 @@
 import amqplib from "amqplib";
 import { createChannel } from "../../config/rabbitmq.js";
+import { sendEmail } from "../../config/mail/sendmail.js";
 const MAX_RETRY = 3;
 
 
@@ -25,7 +26,11 @@ const startEmailConsumer = async () => {
         console.log(retryCount, "retryCount");
 
         // Email send logic here
-        throw new Error("Error while sending email"); // 👈 UNCOMMENT to test retry
+        // throw new Error("Error while sending email"); // 👈 UNCOMMENT to test retry
+         await sendEmail(messageData.email,
+            "Your OTP Code",
+            `Your OTP for registration is: ${messageData.email}`,
+         )
         
         channel.ack(message);
       } catch (error) {
