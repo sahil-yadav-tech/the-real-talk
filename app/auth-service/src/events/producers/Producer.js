@@ -1,25 +1,33 @@
-import amqplib from "amqplib";
-import { getConfirmChannel } from "../../config/rabbitmq.js";
+import { getConfirmChannel, EXCHANGES } from "../../config/rabbitmq.js";
 import crypto from "crypto";
 
-export const publishEvent = async (name, data) => {
+export const publishEvent = async (exchangeName, data, routingKey = "user.create") => {
   try {
     console.log(data, "data in publishEvent");
 
-    let channel = await getConfirmChannel();
+    const channel = getConfirmChannel();
+    
     const payload = Buffer.from(
       JSON.stringify({
         email: data.email,
         phoneNumber: data.phoneNumber,
+        otp: data.otp,
+        type: data.type,
+        firstName: data.firstName,
       }),
     );
 
-    await channel.publish(name, "order.create", payload, {
-      presistent: true,
+    channel.publish(exchangeName, routingKey, payload, {
+      persistent: true,
       messageId: crypto.randomUUID(),
+      timestamp: Date.now(),
     });
+
     await channel.waitForConfirms();
+    console.log(`✅ Message published to ${exchangeName} with routing key ${routingKey}`);
+    
   } catch (error) {
-    console.log(error, "error while pubish");
+    console.error("Error while publishing:", error);
+    throw error;
   }
 };

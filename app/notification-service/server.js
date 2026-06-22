@@ -1,23 +1,39 @@
-const express = require('express');
+console.log("JAI SHREE RAM JI / JAI BAJARANG BALI JI ❤️👏😍");
+import "dotenv/config";
+import app from "./src/app.js";
+// import connectDB from "./src/config/db.js";
+// import redis from "./src/config/redis.config.js";
+import mongoose from "mongoose"
+import { connectRabbitMq } from "./src/config/rabbitmq.js";
+const PORT = process.env.PORT
 
-const app = express();
+// Boot sequence
+const start = async () => {
+  try {
+    // await connectDB();
+    await connectRabbitMq()
+    
+    const server = app.listen(PORT, () => {
+      console.log(`[server] Running on port ${PORT} 🚀`);
+    });
 
-app.use(express.json());
+    // Graceful shutdown
+    const shutdown = async (signal) => {
+      console.log(`[server] ${signal} received — shutting down`);
+      server.close(async () => {
+        await mongoose.connection.close();
+        process.exit(0);
+      });
+    };
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'notification-service is healthy', 
-    timestamp: new Date().toISOString() 
-  });
-});
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
+    process.on("SIGINT", () => shutdown("SIGINT"));
 
-// Routes will be added here
+    // Catch unhandled errors — prevents silent crashes
+  } catch (err) {
+    console.error("[server] Failed to start:", err);
+    process.exit(1);
+  }
+};
 
-const PORT = process.env.PORT || 3005;
-
-app.listen(PORT, () => {
-  console.log(`Notification Service running on port ${PORT}`);
-});
-
-module.exports = app;
+start();
