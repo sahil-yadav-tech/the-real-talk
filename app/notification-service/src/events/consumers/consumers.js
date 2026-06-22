@@ -29,7 +29,7 @@ const startEmailConsumer = async () => {
         // throw new Error("Error while sending email"); // 👈 UNCOMMENT to test retry
          await sendEmail(messageData.email,
             "Your OTP Code",
-            `Your OTP for registration is: ${messageData.email}`,
+            `Your OTP for registration is: ${messageData.otp}`,
          )
         
         channel.ack(message);
