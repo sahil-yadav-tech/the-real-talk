@@ -21,7 +21,7 @@ const reconnect = () => {
 export const connectRabbitMq = async () => {
   try {
     // connection = await amqplib.connect({
-    const connection = await amqplib.connect("amqp://admin:admin@127.0.0.1:5672");
+   connection = await amqplib.connect(process.env.RABBITMQ_URL)
     //   protocol: "amqp",
     //   hostname: process.env.RABBITMQ_HOST || "localhost",
     //   port: parseInt(process.env.RABBITMQ_PORT || "5672"),

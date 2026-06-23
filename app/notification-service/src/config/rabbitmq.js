@@ -17,14 +17,15 @@ const reconnect = () => {
 
 export const connectRabbitMq = async () => {
   try {
-    connection = await amqplib.connect({
-      protocol: "amqp",
-      hostname: process.env.RABBITMQ_HOST || "localhost",
-      port: parseInt(process.env.RABBITMQ_PORT || "5672"),
-      username: process.env.RABBITMQ_USER || "admin",
-      password: process.env.RABBITMQ_PASS || "admin123",
-    });
+    // connection = await amqplib.connect({
+    //   protocol: "amqp",
+    //   hostname: process.env.RABBITMQ_HOST || "localhost",
+    //   port: parseInt(process.env.RABBITMQ_PORT || "5672"),
+    //   username: process.env.RABBITMQ_USER || "admin",
+    //   password: process.env.RABBITMQ_PASS || "admin123",
+    // });
 
+    connection = await amqplib.connect(process.env.RABBITMQ_URL)
     await setUpQueue();
     await startEmailConsumer();
     console.log("RabbitMQ Connection Established ✅");
