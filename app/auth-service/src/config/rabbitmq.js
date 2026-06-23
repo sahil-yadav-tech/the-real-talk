@@ -20,13 +20,14 @@ const reconnect = () => {
 
 export const connectRabbitMq = async () => {
   try {
-    connection = await amqplib.connect({
-      protocol: 'amqp',
-      hostname: process.env.RABBITMQ_HOST || 'localhost',
-      port: parseInt(process.env.RABBITMQ_PORT || '5672'),
-      username: process.env.RABBITMQ_USER || 'admin',
-      password: process.env.RABBITMQ_PASS || 'admin123'
-    });
+    // connection = await amqplib.connect({
+    const connection = await amqplib.connect("amqp://admin:admin@127.0.0.1:5672");
+    //   protocol: "amqp",
+    //   hostname: process.env.RABBITMQ_HOST || "localhost",
+    //   port: parseInt(process.env.RABBITMQ_PORT || "5672"),
+    //   username: process.env.RABBITMQ_USER || "admin",
+    //   password: process.env.RABBITMQ_PASS || "admin123",
+    // });
 
     console.log("RabbitMQ Connection Established ✅");
 
@@ -42,8 +43,8 @@ export const connectRabbitMq = async () => {
     });
 
     // Create confirm channel for publishing
-    confirmChannel = await connection.createConfirmChannel();
-    
+    confirmChannel = await connection.createConfirmChannel(); 
+
     // Setup exchanges
     await setupExchanges();
 
@@ -63,7 +64,7 @@ export const getConfirmChannel = () => {
 
 export const setupExchanges = async () => {
   const ch = getConfirmChannel();
-  
+
   await ch.assertExchange(EXCHANGES.SEND_OTP, "topic", {
     durable: true,
   });
