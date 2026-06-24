@@ -1,4 +1,5 @@
 
+import { BadRequestError } from '../../../../packages/common/errors/index.js';
 import User from '../models/user.model.js';
 
 // /**
@@ -10,6 +11,12 @@ import User from '../models/user.model.js';
 export const findByEmail = async (email, includePassword = false) => {
   try {
     const query = User.findOne({ email: email.toLowerCase() });
+    if(query){
+   throw new BadRequestError(
+      "User already exists"
+   );
+}
+
     if (!includePassword) {
       query.select('-password');
     }
@@ -36,7 +43,17 @@ export const findByPhone = async (phoneNumber, includePassword = false) => {
   }
 };
 
+export const createUser  = async (data) => {
+  console.log(data, "data -------");
+  
+  try {
+    const query = await User.create({
 
+    })
+  } catch (error) {
+    throw error
+  }
+}
 
 
 

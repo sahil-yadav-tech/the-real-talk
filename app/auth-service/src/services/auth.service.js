@@ -2,10 +2,13 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
-import { findByEmail, findByPhone } from "../repositories/user.repository.js";
+import { createUser, findByEmail, findByPhone } from "../repositories/user.repository.js";
 import redis from "../config/redis.config.js";
 import { generateSimpleOtp } from "../../../../packages/common/utils/otpGenerator.js";
 import { publishEvent } from "../events/producers/Producer.js";
+import { BadRequestError }
+from "../../../../packages/common/errors/index.js";
+
 
 export const registerService = async (userData) => {
   const { email, phoneNumber, password, firstName, lastName } = userData;
@@ -87,10 +90,10 @@ export const registerService = async (userData) => {
 
   // Publish event to RabbitMQ (non-blocking)
   try {
-    await publishEvent('SEND_OTP', {
+    await publishEvent("SEND_OTP", {
       email: normalizedEmail,
       otp,
-      type: 'REGISTER',
+      type: "REGISTER",
       firstName: firstName.trim(),
     });
     console.info(`OTP event published for email: ${normalizedEmail}`);
@@ -111,6 +114,57 @@ export const registerService = async (userData) => {
       expiresIn: `${otpExpiryInSeconds / 60} minutes`,
     },
   };
+};
+
+
+
+export const verifyOtpService = async (
+  data
+) => {
+
+  const { email, otp } = data;
+
+  const redisKey =
+    `register:${email.toLowerCase().trim()}`;
+
+  const existingData =
+    await redis.get(redisKey);
+
+  if(!existingData){
+    throw new BadRequestError(
+      "OTP expired"
+    );
+  }
+
+  const userData =
+    JSON.parse(existingData);
+
+  if(
+    String(userData.otp)
+    !==
+    String(otp)
+  ){
+    throw new BadRequestError(
+      "Invalid OTP"
+    );
+  }
+
+  const user =
+    await createUser({
+      firstName:userData.firstName,
+      lastName:userData.lastName,
+      email:userData.email,
+      phoneNumber:userData.phoneNumber,
+      password:userData.password
+    });
+
+  await redis.del(redisKey);
+
+  return {
+    message:"User created successfully",
+    data:user
+  };
+
 };
 
 /*

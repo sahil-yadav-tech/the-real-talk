@@ -4,32 +4,41 @@
 import {
   errorResponse,
   successResponse,
-  createdResponse,
+  // createdResponse,
 } from "../../../../packages/common/response/sendResponse.js";
 import { asyncHandler } from "../../../../packages/common/utils/asyncHandler.js";
-import { registerService } from "../services/auth.service.js";
+import { registerService, verifyOtpService } from "../services/auth.service.js";
 
-export const register = asyncHandler(async (req, res) => {
-  const { message, success, data } = await registerService(req.validatedData);
+/*
 
-  console.log("Registration result:", { message, success, data });
+*/
+export const register = asyncHandler(
+  async (req,res)=>{
 
-  if (success) {
-    return successResponse(res, message, data, 201, null);
-  } else {
-    return errorResponse(
-      res,
-      message,
-      409,
-      {
-        conflict: "OTP already sent",
-        email: data?.email,
-        phoneNumber: data?.phoneNumber,
-        resendAvailable: data?.resendAvailable,
-      },
-      null, 
+    const data = await registerService(
+      req.validatedData
     );
-  }
+
+    return successResponse(
+      res,
+      data.message,
+      data.data,
+      201
+    );
+
+});
+
+/*
+VERIFY OTP 
+CHECK IN REDIS OTP
+CREATE USER AFTER VERIFY 
+*/
+export const verifyOtp = asyncHandler(async (req, res) => {
+  console.log(req.validatedData, "req.validatedData");
+  
+  const data = await verifyOtpService(req.validatedData);
+
+  
 });
 
 /*

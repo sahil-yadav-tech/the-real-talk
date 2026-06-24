@@ -49,3 +49,12 @@ export const loginSchema = z.object({
 
   password: z.string().min(1, "Password is required"),
 });
+
+export const verifyotpSchema = z.object({
+  otp: z
+    .string()
+    .min(6, "Otp must be at least 6 characters")
+    .max(6, "Otp must be at least 6 characters"),
+    
+  email: z.string().trim().email("Invalid email address"),
+});
