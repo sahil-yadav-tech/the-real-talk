@@ -1,5 +1,6 @@
 // auth-service/src/middlewares/errorHandler.js
 import logger from "../../../../packages/common/logger/index.js";
+import { errorResponse } from "../../../../packages/common/response/sendResponse.js";
 // import {
 //   errorResponse,
 //   // BadRequestError,

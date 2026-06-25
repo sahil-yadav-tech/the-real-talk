@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { email, z } from "zod";
 
 export const registerSchema = z.object({
   firstName: z
@@ -44,12 +44,6 @@ export const registerSchema = z.object({
   dateOfBirth: z.coerce.date().optional(),
 });
 
-export const loginSchema = z.object({
-  email: z.string().trim().email("Invalid email address"),
-
-  password: z.string().min(1, "Password is required"),
-});
-
 export const verifyotpSchema = z.object({
   otp: z
     .string()
@@ -58,3 +52,13 @@ export const verifyotpSchema = z.object({
     
   email: z.string().trim().email("Invalid email address"),
 });
+
+
+export const loginSchema = z.object({
+  email:z.string().trim().email("Invalid email address"),
+   password: z
+    .string()
+    .min(1, "Password must be at least 8 characters")
+    .max(100, "Password cannot exceed 100 characters"),
+
+})

@@ -2,16 +2,19 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
-import { createUser, findByEmail, findByPhone } from "../repositories/user.repository.js";
+import {
+  createUser,
+  findByEmail,
+  findByPhone,
+} from "../repositories/user.repository.js";
 import redis from "../config/redis.config.js";
 import { generateSimpleOtp } from "../../../../packages/common/utils/otpGenerator.js";
 import { publishEvent } from "../events/producers/Producer.js";
-import { BadRequestError }
-from "../../../../packages/common/errors/index.js";
+import { BadRequestError } from "../../../../packages/common/errors/index.js";
+import { generateAccessToken, generateRefreshToken } from "../../../../packages/common/utils/jwt.js";
 
-
-export const registerService = async (userData) => {
-  const { email, phoneNumber, password, firstName, lastName } = userData;
+export const registerService = async (data) => {
+  const { email, phoneNumber, password, firstName, lastName } = data;
 
   // Normalize email
   const normalizedEmail = email.toLowerCase().trim();
@@ -21,6 +24,8 @@ export const registerService = async (userData) => {
     findByEmail(normalizedEmail),
     findByPhone(phoneNumber),
   ]);
+
+  console.log(existingUser, existingUserByPhone, "existingUser");
 
   if (existingUser) {
     throw new BadRequestError("User already exists with this email");
@@ -116,55 +121,86 @@ export const registerService = async (userData) => {
   };
 };
 
-
-
-export const verifyOtpService = async (
-  data
-) => {
-
+export const verifyOtpService = async (data) => {
   const { email, otp } = data;
 
-  const redisKey =
-    `register:${email.toLowerCase().trim()}`;
+  const normalizedEmail = email.toLowerCase().trim();
 
-  const existingData =
-    await redis.get(redisKey);
+  const redisKey = `register:${normalizedEmail}`;
 
-  if(!existingData){
-    throw new BadRequestError(
-      "OTP expired"
-    );
+  const existingData = await redis.get(redisKey);
+
+  if (!existingData) {
+    throw new BadRequestError("OTP expired");
   }
 
-  const userData =
-    JSON.parse(existingData);
+  const userData = JSON.parse(existingData);
 
-  if(
-    String(userData.otp)
-    !==
-    String(otp)
-  ){
-    throw new BadRequestError(
-      "Invalid OTP"
-    );
+  if (String(userData.otp) !== String(otp)) {
+    throw new BadRequestError("Invalid OTP");
   }
 
-  const user =
-    await createUser({
-      firstName:userData.firstName,
-      lastName:userData.lastName,
-      email:userData.email,
-      phoneNumber:userData.phoneNumber,
-      password:userData.password
-    });
+  const user = await createUser({
+    firstName: userData.firstName,
+    lastName: userData.lastName,
+    email: userData.email,
+    phoneNumber: userData.phoneNumber,
+    password: userData.password,
+  });
 
   await redis.del(redisKey);
 
-  return {
-    message:"User created successfully",
-    data:user
-  };
+  const response = user.toObject();
 
+  delete response.password;
+
+  return {
+    message: "User created successfully",
+    data: response,
+  };
+};
+
+export const loginService = async (data) => {
+  console.log(data, "data in login");
+  const { email, password } = data;
+  console.log(email, password);
+  const normalizedEmail = email.toLowerCase().trim();
+
+  const user = await findByEmail(normalizedEmail, true);
+  console.log(user, "Check Email");
+
+  if (!user) {
+    throw new BadRequestError("User not exists with this email");
+  }
+
+  // Check Password
+  const isPasswordMatched = await bcrypt.compare(password, user.password);
+  console.log(isPasswordMatched, "checkPassword");
+
+    if (!isPasswordMatched) {
+    throw new BadRequestError(
+      "Invalid email or password"
+    );
+  }
+
+  const accessToken =
+    generateAccessToken({
+      userId: user._id,
+      email: user.email,
+    });
+
+  const refreshToken =
+    generateRefreshToken({
+      userId: user._id,
+    });
+
+    return {
+    success: true,
+    message: "OTP sent successfully. Please check your email.",
+    data: {
+      refreshToken
+    },
+  };
 };
 
 /*

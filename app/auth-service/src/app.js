@@ -60,6 +60,6 @@ app.use('/api/v1/auth', authRoutes);
 
 // ===== ERROR HANDLING (MUST BE LAST) =====
 // app.use(notFoundHandler);  // 404 handler
-// app.use(errorHandler);     // Global error handler
+app.use(errorHandler);     // Global error handler
 
 export default app;

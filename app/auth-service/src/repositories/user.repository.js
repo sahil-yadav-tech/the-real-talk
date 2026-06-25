@@ -1,6 +1,5 @@
-
-import { BadRequestError } from '../../../../packages/common/errors/index.js';
-import User from '../models/user.model.js';
+import { BadRequestError } from "../../../../packages/common/errors/index.js";
+import User from "../models/user.model.js";
 
 // /**
 //  * Find user by email
@@ -10,191 +9,61 @@ import User from '../models/user.model.js';
 //  */
 export const findByEmail = async (email, includePassword = false) => {
   try {
-    const query = User.findOne({ email: email.toLowerCase() });
-    if(query){
-   throw new BadRequestError(
-      "User already exists"
-   );
-}
+    let query = User.findOne({
+      email: email.toLowerCase().trim(),
+    });
 
     if (!includePassword) {
-      query.select('-password');
+      query = query.select("-password");
     }
+
     return await query;
   } catch (error) {
-    // logger.error(`Error finding user by email: ${error.message}`);
     throw error;
   }
 };
 
-export const findByPhone = async (phoneNumber, includePassword = false) => {
-  console.log(phoneNumber, "phoneNumber");
-  
+export const findByPhone = async (
+  phoneNumber,
+  includePassword = false
+) => {
   try {
-    const query = User.findOne({ phoneNumber: "9876543210" });
-    
+    let query = User.findOne({
+      phoneNumber,
+    });
+
     if (!includePassword) {
-      query.select('-password');
+      query = query.select("-password");
     }
+
     return await query;
   } catch (error) {
-    // logger.error(`Error finding user by email: ${error.message}`);
     throw error;
   }
 };
 
-export const createUser  = async (data) => {
-  console.log(data, "data -------");
-  
+export const createUser = async (data) => {
   try {
-    const query = await User.create({
+    const user = await User.create({
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email.toLowerCase().trim(),
+      phoneNumber: data.phoneNumber,
+      password: data.password,
+      username:data.firstName + data.lastName
+    });
 
-    })
+    return user;
   } catch (error) {
-    throw error
+    if (error.code === 11000) {
+      throw new BadRequestError(
+        "User already exists"
+      );
+    }
+
+    throw error;
   }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+};
 
 
 
@@ -247,7 +116,7 @@ export const createUser  = async (data) => {
 //     const user = await User.findByIdAndUpdate(
 //       id,
 //       updateData,
-//       { 
+//       {
 //         new: true,
 //         runValidators: true,
 //         select: '-password -__v'
@@ -380,13 +249,13 @@ export const createUser  = async (data) => {
 //     if (!user) return;
 
 //     user.failedLoginAttempts += 1;
-    
+
 //     // Lock account after 5 failed attempts
 //     if (user.failedLoginAttempts >= 5) {
 //       user.isLocked = true;
 //       user.lockUntil = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes
 //     }
-    
+
 //     await user.save();
 //   } catch (error) {
 //     // logger.error(`Error incrementing failed attempts: ${error.message}`);

@@ -1,31 +1,21 @@
-// ==========================================
-// auth.controller.js
-// ==========================================
 import {
   errorResponse,
   successResponse,
-  // createdResponse,
 } from "../../../../packages/common/response/sendResponse.js";
 import { asyncHandler } from "../../../../packages/common/utils/asyncHandler.js";
-import { registerService, verifyOtpService } from "../services/auth.service.js";
+import {
+  loginService,
+  registerService,
+  verifyOtpService,
+} from "../services/auth.service.js";
 
 /*
 
 */
-export const register = asyncHandler(
-  async (req,res)=>{
+export const register = asyncHandler(async (req, res) => {
+  const data = await registerService(req.validatedData);
 
-    const data = await registerService(
-      req.validatedData
-    );
-
-    return successResponse(
-      res,
-      data.message,
-      data.data,
-      201
-    );
-
+  return successResponse(res, data.message, data.data, 201);
 });
 
 /*
@@ -34,11 +24,28 @@ CHECK IN REDIS OTP
 CREATE USER AFTER VERIFY 
 */
 export const verifyOtp = asyncHandler(async (req, res) => {
-  console.log(req.validatedData, "req.validatedData");
-  
   const data = await verifyOtpService(req.validatedData);
+  return successResponse(res, data.message, data.data, 201);
+});
 
+/*
+LOGIN API
+*/
+export const login = asyncHandler(async (req, res) => {
+  const data = await loginService(req.validatedData);
+  console.log(data, "data");
   
+
+  res.cookie("refreshToken", data.refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  return successResponse(res, "Login successful", {
+    accessToken: data.accessToken,
+  });
 });
 
 /*
