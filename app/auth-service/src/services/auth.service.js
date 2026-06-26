@@ -11,7 +11,11 @@ import redis from "../config/redis.config.js";
 import { generateSimpleOtp } from "../../../../packages/common/utils/otpGenerator.js";
 import { publishEvent } from "../events/producers/Producer.js";
 import { BadRequestError } from "../../../../packages/common/errors/index.js";
-import { generateAccessToken, generateRefreshToken } from "../../../../packages/common/utils/jwt.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from "../../../../packages/common/utils/jwt.js";
 
 export const registerService = async (data) => {
   const { email, phoneNumber, password, firstName, lastName } = data;
@@ -161,46 +165,101 @@ export const verifyOtpService = async (data) => {
 };
 
 export const loginService = async (data) => {
-  console.log(data, "data in login");
   const { email, password } = data;
-  console.log(email, password);
+
   const normalizedEmail = email.toLowerCase().trim();
 
   const user = await findByEmail(normalizedEmail, true);
-  console.log(user, "Check Email");
 
   if (!user) {
-    throw new BadRequestError("User not exists with this email");
+    throw new BadRequestError("Invalid email or password");
   }
 
-  // Check Password
   const isPasswordMatched = await bcrypt.compare(password, user.password);
-  console.log(isPasswordMatched, "checkPassword");
 
-    if (!isPasswordMatched) {
-    throw new BadRequestError(
-      "Invalid email or password"
-    );
+  if (!isPasswordMatched) {
+    throw new BadRequestError("Invalid email or password");
   }
 
-  const accessToken =
-    generateAccessToken({
-      userId: user._id,
-      email: user.email,
-    });
+  const sessionId = crypto.randomUUID();
 
-  const refreshToken =
-    generateRefreshToken({
-      userId: user._id,
-    });
+  const accessToken = generateAccessToken({
+    userId: user._id,
+    email: user.email,
+    role: user.role,
+  });
 
-    return {
-    success: true,
-    message: "OTP sent successfully. Please check your email.",
-    data: {
-      refreshToken
-    },
+  const refreshToken = generateRefreshToken({
+    userId: user._id,
+    sessionId,
+  });
+
+  await redis.set(
+    `refresh:${user._id}:${sessionId}`,
+    refreshToken,
+    "EX",
+    7 * 24 * 60 * 60,
+  );
+
+  const userResponse = user.toObject();
+
+  delete userResponse.password;
+
+  return {
+    user: userResponse,
+    accessToken,
+    refreshToken,
+    sessionId,
   };
+};
+
+export const refreshTokenService = async (refreshToken, sessionId) => {
+  if (!refreshToken) {
+    throw new BadRequestError("Refresh token missing");
+  }
+
+  const decoded = verifyRefreshToken(refreshToken);
+
+  const redisKey = `refresh:${decoded.userId}:${sessionId}`;
+
+  console.log(redisKey, "redisKey");
+
+  const storedToken = await redis.get(redisKey);
+
+  console.log(storedToken, "storedToken");
+  
+
+  if (!storedToken || storedToken !== refreshToken) {
+    throw new BadRequestError("Invalid session");
+  }
+
+  // Rotation
+
+  await redis.del(redisKey);
+
+  const newAccessToken = generateAccessToken({
+    userId: decoded.userId,
+  });
+
+  const newRefreshToken = generateRefreshToken({
+    userId: decoded.userId,
+    sessionId,
+  });
+
+  await redis.set(redisKey, newRefreshToken, "EX", 7 * 24 * 60 * 60);
+
+  return {
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+  };
+};
+
+export const logoutService = async (refreshToken, sessionId) => {
+  const decoded = verifyRefreshToken(refreshToken);
+
+  await redis.del(`refresh:${decoded.userId}:${sessionId}`);
+
+  return true;
 };
 
 /*

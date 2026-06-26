@@ -7,14 +7,35 @@ import User from "../models/user.model.js";
 //  * @param {boolean} includePassword - Include password field
 //  * @returns {Promise<Object|null>}
 //  */
-export const findByEmail = async (email, includePassword = false) => {
+// export const findByEmail = async (email, includePassword = false) => {
+//   try {
+//     let query = User.findOne({
+//       email: email.toLowerCase().trim(),
+//     });
+
+//     if (!includePassword) {
+//       query = query.select("-password");
+//     }
+
+//     return await query;
+//   } catch (error) {
+//     throw error;
+//   }
+// };
+
+export const findByEmail = async (
+  email,
+  includePassword = false
+) => {
   try {
     let query = User.findOne({
-      email: email.toLowerCase().trim(),
+      email:
+        email.toLowerCase().trim(),
     });
 
-    if (!includePassword) {
-      query = query.select("-password");
+    if (includePassword) {
+      query =
+        query.select("+password");
     }
 
     return await query;

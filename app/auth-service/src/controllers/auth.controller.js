@@ -5,6 +5,8 @@ import {
 import { asyncHandler } from "../../../../packages/common/utils/asyncHandler.js";
 import {
   loginService,
+  logoutService,
+  refreshTokenService,
   registerService,
   verifyOtpService,
 } from "../services/auth.service.js";
@@ -34,7 +36,6 @@ LOGIN API
 export const login = asyncHandler(async (req, res) => {
   const data = await loginService(req.validatedData);
   console.log(data, "data");
-  
 
   res.cookie("refreshToken", data.refreshToken, {
     httpOnly: true,
@@ -43,95 +44,53 @@ export const login = asyncHandler(async (req, res) => {
     maxAge: 7 * 24 * 60 * 60 * 1000,
   });
 
+  res.cookie("sessionId", data.sessionId, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
   return successResponse(res, "Login successful", {
+    user: data.user,
     accessToken: data.accessToken,
   });
 });
 
-/*
-export const login = asyncHandler(async (req, res) => {
-  const { user, token } = await loginService(req.body);
+export const refreshToken = asyncHandler(async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
 
-  setAuthCookie(res, token);
+  const sessionId = req.cookies.sessionId;
+  // console.log(req.cookies);
 
-  await updateLastLogin(user._id);
+  const data = await refreshTokenService(refreshToken, sessionId);
 
-  logger.info(`User logged in: ${user.email}`);
+  res.cookie("refreshToken", data.refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
 
-  return successResponse(res, 'Login successful', { user, token });
+  return successResponse(res, "Token refreshed", {
+    accessToken: data.accessToken,
+  });
 });
 
 export const logout = asyncHandler(async (req, res) => {
-  res.clearCookie('user_token', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
-  });
+  const refreshToken = req.cookies.refreshToken;
 
-  logger.info(`User logged out: ${req.user?.email || 'unknown'}`);
+  const sessionId = req.cookies.sessionId;
 
-  return successResponse(res, 'Logged out successfully');
+  await logoutService(refreshToken, sessionId);
+
+  res.clearCookie("refreshToken");
+
+  res.clearCookie("sessionId");
+
+  return successResponse(res, "Logout successful");
 });
 
-export const refreshToken = asyncHandler(async (req, res) => {
-  const { refreshToken } = req.body;
-
-  if (!refreshToken) {
-    throw new BadRequestError('Refresh token required');
-  }
-
-  const { user, token } = await refreshTokenService(refreshToken);
-
-  setAuthCookie(res, token);
-
-  return successResponse(res, 'Token refreshed successfully', { user, token });
+export const checkAuth = asyncHandler(async (req, res) => {
+  return successResponse(res, "Authenticated", req.user);
 });
-
-export const getProfile = asyncHandler(async (req, res) => {
-  const user = await getUserById(req.user._id);
-
-  if (!user) {
-    throw new NotFoundError('User not found');
-  }
-
-  return successResponse(res, 'Profile fetched successfully', { user });
-});
-
-export const updateProfile = asyncHandler(async (req, res) => {
-  const { firstName, lastName, preferences } = req.body;
-
-  const updatedUser = await updateUserService(req.user._id, {
-    firstName,
-    lastName,
-    preferences
-  });
-
-  return successResponse(res, 'Profile updated successfully', { user: updatedUser });
-});
-
-export const changePassword = asyncHandler(async (req, res) => {
-  const { currentPassword, newPassword } = req.body;
-
-  await changePasswordService(req.user._id, currentPassword, newPassword);
-
-  return successResponse(res, 'Password changed successfully');
-});
-
-const setAuthCookie = (res, token) => {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const cookieOptions = {
-    httpOnly: true,
-    secure: isProduction,
-    sameSite: isProduction ? 'none' : 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: '/'
-  };
-
-  if (isProduction && process.env.COOKIE_DOMAIN) {
-    cookieOptions.domain = process.env.COOKIE_DOMAIN;
-  }
-
-  res.cookie('user_token', token, cookieOptions);
-};
-
-*/
