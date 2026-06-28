@@ -1,484 +1,90 @@
-// packages/common/errors/AppError.js
-export class AppError extends Error {
-  constructor(message, statusCode, isOperational = true, errorCode = null) {
-    super(message);
-    
-    // Error properties
-    this.statusCode = statusCode;
-    this.isOperational = isOperational;
-    this.errorCode = errorCode || `ERR_${statusCode}`;
-    this.status = `${statusCode}`.startsWith('4') ? 'fail' : 'error';
-    this.timestamp = new Date().toISOString();
-    
-    // Capture stack trace
-    Error.captureStackTrace(this, this.constructor);
-    
-    // For debugging - but never expose in production
-    if (process.env.NODE_ENV !== 'production') {
-      this.stack = this.stack;
-    }
-  }
-
-  // Helper method to format error for response
-  toJSON() {
-    return {
-      success: false,
-      message: this.message,
-      errorCode: this.errorCode,
-      statusCode: this.statusCode,
-      timestamp: this.timestamp,
-      ...(process.env.NODE_ENV !== 'production' && { stack: this.stack })
-    };
-  }
-}
-
-
-
-// // errors/BadRequestError.js
-
-// import  AppError  from "./AppError.js";
-
-
-// class BadRequestError extends AppError {
-//   constructor(message = "Bad Request") {
-//     super(message, 400);
-//   }
-// }
-const BadRequestError =() => {
-  
-}
-
-export default BadRequestError;
-
-
-
-// packages/common/errors/index.js
-export { AppError } from './AppError.js';
-
-// 4xx Client Errors
-export class BadRequestError extends AppError {
-  constructor(message = 'Bad Request', errorCode = 'ERR_BAD_REQUEST') {
-    super(message, 400, true, errorCode);
-  }
-}
-
-export class UnauthorizedError extends AppError {
-  constructor(message = 'Unauthorized', errorCode = 'ERR_UNAUTHORIZED') {
-    super(message, 401, true, errorCode);
-  }
-}
-
-export class ForbiddenError extends AppError {
-  constructor(message = 'Forbidden', errorCode = 'ERR_FORBIDDEN') {
-    super(message, 403, true, errorCode);
-  }
-}
-
-export class NotFoundError extends AppError {
-  constructor(message = 'Resource not found', errorCode = 'ERR_NOT_FOUND') {
-    super(message, 404, true, errorCode);
-  }
-}
-
-export class ValidationError extends AppError {
-  constructor(message = 'Validation failed', errors = null, errorCode = 'ERR_VALIDATION') {
-    super(message, 422, true, errorCode);
-    this.errors = errors;
-  }
-}
-
-export class ConflictError extends AppError {
-  constructor(message = 'Resource already exists', errorCode = 'ERR_CONFLICT') {
-    super(message, 409, true, errorCode);
-  }
-}
-
-export class TooManyRequestsError extends AppError {
-  constructor(message = 'Too many requests', errorCode = 'ERR_RATE_LIMIT') {
-    super(message, 429, true, errorCode);
-  }
-}
-
-// 5xx Server Errors
-export class InternalServerError extends AppError {
-  constructor(message = 'Internal server error', errorCode = 'ERR_INTERNAL') {
-    super(message, 500, false, errorCode);
-  }
-}
-
-export class ServiceUnavailableError extends AppError {
-  constructor(message = 'Service temporarily unavailable', errorCode = 'ERR_SERVICE_UNAVAILABLE') {
-    super(message, 503, false, errorCode);
-  }
-}
-
-
-// errors/NotFoundError.js
-
-
-class NotFoundError extends Error {
-  constructor(message = "Resource not found") {
-    super(message, 404);
-  }
-}
-
-export default NotFoundError;
-
-
-// packages/common/response/sendResponse.js
-import { logger } from '../logger/index.js';
-
-// ==========================================
-// MAIN FUNCTION - Jo response bhejta hai
-// ==========================================
-export const sendResponse = (res, statusCode, message, data = null, errors = null, meta = null) => {
-  
-  // 1. Response banayein
-  const response = {
-    success: statusCode >= 200 && statusCode < 300,
-    message: message,
-  };
-
-  // 2. Agar data hai toh add karein
-  if (data) {
-    response.data = data;
-  }
-
-  // 3. Agar errors hain toh add karein
-  if (errors) {
-    response.errors = errors;
-  }
-
-  // 4. Meta data add karein
-  response.meta = {
-    timestamp: new Date().toISOString(),
-    service: process.env.SERVICE_NAME || 'unknown',
-  };
-
-  // 5. Request ID add karein agar hai toh
-  const requestId = res.get('x-request-id');
-  if (requestId) {
-    response.meta.requestId = requestId;
-  }
-
-  // 6. Correlation ID add karein agar hai toh
-  const correlationId = res.get('x-correlation-id');
-  if (correlationId) {
-    response.meta.correlationId = correlationId;
-  }
-
-  // 7. Custom meta add karein agar hai toh
-  if (meta) {
-    for (let key in meta) {
-      response.meta[key] = meta[key];
-    }
-  }
-
-  // 8. Agar error hai toh log karein
-  if (statusCode >= 400) {
-    logger.error({
-      message: 'Error response sent',
-      statusCode: statusCode,
-      path: res.req?.path,
-      method: res.req?.method,
-    });
-  }
-
-  // 9. Response bhejein
-  return res.status(statusCode).json(response);
-};
-
-// ==========================================
-// SUCCESS - Jab sab theek ho (200)
-// ==========================================
-export const successResponse = (res, message = 'Success', data = null, statusCode = 200, meta = null) => {
-  return sendResponse(res, statusCode, message, data, null, meta);
-};
-
-// ==========================================
-// CREATED - Jab naya resource bane (201)
-// ==========================================
-export const createdResponse = (res, message = 'Created successfully', data = null, meta = null) => {
-  return sendResponse(res, 201, message, data, null, meta);
-};
-
-// ==========================================
-// ERROR - Jab kuch galat ho (400, 404, 500, etc.)
-// ==========================================
-export const errorResponse = (res, message = 'Something went wrong', statusCode = 500, errors = null, meta = null) => {
-  return sendResponse(res, statusCode, message, null, errors, meta);
-};
-
-// ==========================================
-// NO CONTENT - Jab kuch return nahi karna (204)
-// ==========================================
-export const noContentResponse = (res) => {
-  return res.status(204).send();
-};
-
-// packages/common/utils/asyncHandler.js
-import { logger } from '../logger/index.js';
-
-/**
- * Wraps async controller functions with error handling
- * Production-grade with correlation ID support
- */
-export const asyncHandler = (fn) => {
-  return async (req, res, next) => {
-    try {
-      // Execute the controller function
-      const result = await fn(req, res, next);
-      return result;
-    } catch (error) {
-      // Prepare error context for logging
-      const errorContext = {
-        message: error.message,
-        stack: error.stack,
-        path: req.path,
-        method: req.method,
-        ip: req.ip,
-        userId: req.user?._id || req.user?.id || 'unauthenticated',
-        correlationId: req.correlationId || req.headers['x-correlation-id'],
-        requestId: req.id || req.headers['x-request-id'],
-        errorCode: error.errorCode || 'ERR_UNKNOWN',
-        statusCode: error.statusCode || 500,
-        userAgent: req.get('user-agent'),
-        referer: req.get('referer'),
-        query: req.query,
-        params: req.params,
-        // Don't log sensitive data, but log body structure for debugging
-        body: sanitizeRequestBody(req.body),
-      };
-
-      // Log the error
-      logger.error(errorContext);
-
-      // Pass to error handler middleware
-      next(error);
-    }
-  };
-};
-
-// Helper to sanitize request body (remove passwords, tokens, etc.)
-const sanitizeRequestBody = (body) => {
-  if (!body || typeof body !== 'object') return body;
-  
-  const sanitized = { ...body };
-  const sensitiveFields = ['password', 'confirmPassword', 'token', 'accessToken', 'refreshToken', 'secret', 'apiKey'];
-  
-  for (const field of sensitiveFields) {
-    if (field in sanitized) {
-      sanitized[field] = '[REDACTED]';
-    }
-  }
-  
-  return sanitized;
-};
-
-
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import crypto from "crypto";
-
-import { createUser, findByEmail, findByPhone } from "../repositories/user.repository.js";
-import redis from "../config/redis.config.js";
-import { generateSimpleOtp } from "../../../../packages/common/utils/otpGenerator.js";
-import { publishEvent } from "../events/producers/Producer.js";
-import BadRequestError from "../../../../packages/common/errors/BadRequestError.js";
-
-export const registerService = async (userData) => {
-  const { email, phoneNumber, password, firstName, lastName } = userData;
-
-  // Normalize email
-  const normalizedEmail = email.toLowerCase().trim();
-
-  // Check if user already exists in database
-  const [existingUser, existingUserByPhone] = await Promise.all([
-    findByEmail(normalizedEmail),
-    findByPhone(phoneNumber),
-  ]);
-
-  if (existingUser) {
-    throw new BadRequestError("User already exists with this email");
-  }
-
-  if (existingUserByPhone) {
-    throw new BadRequestError("User already exists with this phone number");
-  }
-
-  // Check if registration is already in progress (Redis)
-  const redisKey = `register:${normalizedEmail}`;
-  const existingRegistrationData = await redis.get(redisKey);
-
-  if (existingRegistrationData) {
-    const parsedData = JSON.parse(existingRegistrationData);
-    console.info(
-      `Registration already in progress for email: ${normalizedEmail}`,
-    );
-
-    // Return existing OTP info without creating new one
-    return {
-      success: true,
-      message: "OTP already sent. Please check your email.",
-      data: {
-        email: normalizedEmail,
-        phoneNumber,
-        otpSent: true,
-        resendAvailable: true,
-      },
-    };
-  }
-
-  // Hash password
-  const saltRounds = Number(process.env.BCRYPT_SALT_ROUNDS) || 10;
-  const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-  // Generate OTP
-  const otp = generateSimpleOtp();
-  const otpExpiryInSeconds = 300; // 5 minutes
-
-  // Prepare registration data for Redis
-  const registrationData = {
-    firstName: firstName.trim(),
-    lastName: lastName.trim(),
-    email: normalizedEmail,
-    phoneNumber: phoneNumber.trim(),
-    password: hashedPassword,
-    otp,
-    createdAt: new Date().toISOString(),
-  };
-
-  // Store registration data in Redis
-  try {
-    await redis.set(
-      redisKey,
-      JSON.stringify(registrationData),
-      "EX",
-      otpExpiryInSeconds,
-    );
-    console.info(
-      `Registration data stored in Redis for email: ${normalizedEmail}`,
-    );
-  } catch (error) {
-    console.error("Failed to store registration data in Redis:", error);
-    throw new Error("Failed to process registration. Please try again.");
-  }
-
-  // Publish event to RabbitMQ (non-blocking)
-  try {
-    await publishEvent("SEND_OTP", {
-      email: normalizedEmail,
-      otp,
-      type: "REGISTER",
-      firstName: firstName.trim(),
-    });
-    console.info(`OTP event published for email: ${normalizedEmail}`);
-  } catch (error) {
-    console.error("Failed to publish OTP event:", error);
-    // Don't throw - registration can continue even if notification fails
-    // But we should handle this gracefully
-  }
-
-  // Return success response (without sensitive data)
-  return {
-    success: true,
-    message: "OTP sent successfully. Please check your email.",
-    data: {
-      email: normalizedEmail,
-      phoneNumber: phoneNumber.trim(),
-      otpSent: true,
-      expiresIn: `${otpExpiryInSeconds / 60} minutes`,
-    },
-  };
-};
-
-export const verifyOtpService = async (dataValue) => {
-  const { otp, email } = dataValue;
-  console.log(otp, "otp");
-  const normalizedEmail = email.toLowerCase().trim();
-
-  const redisKey = `register:${normalizedEmail}`;
-  const existingRegistrationData = await redis.get(redisKey);
-
-  console.log(existingRegistrationData, "existingRegistrationData");
-
-  if (!existingRegistrationData) {
-    // throw new Error("INvalid OTP! Or expired Otp");
-    throw new BadRequestError("Invalid OTP! Or expired Otp");
-  }
-
-  const redisData = await JSON.stringify(existingRegistrationData);
-  console.log(redisData, "redisData");
-
-  if (redisData.otp === otp) {
-    if (redis.email === email) {
-      const createUserData = await createUser(redisData);
-    } else {
-      throw new BadRequestError("Email Not matching");
-    }
-  } else {
-    throw new BadRequestError("User already exists with this email");
-  }
-
-  // console.log(data, "Data");
-  // const redisKey = `rediskey`
-  // const redisKey = `register:${normalizedEmail}`;
-};
-
-
-
-
-import User from '../models/user.model.js';
-
-// /**
-//  * Find user by email
-//  * @param {string} email - User's email
-//  * @param {boolean} includePassword - Include password field
-//  * @returns {Promise<Object|null>}
-//  */
-export const findByEmail = async (email, includePassword = false) => {
-  try {
-    const query = User.findOne({ email: email.toLowerCase() });
-    if (!includePassword) {
-      query.select('-password');
-    }
-    return await query;
-  } catch (error) {
-    // logger.error(`Error finding user by email: ${error.message}`);
-    throw error;
-  }
-};
-
-export const findByPhone = async (phoneNumber, includePassword = false) => {
-  console.log(phoneNumber, "phoneNumber");
-  
-  try {
-    const query = User.findOne({ phoneNumber: "9876543210" });
-    
-    if (!includePassword) {
-      query.select('-password');
-    }
-    return await query;
-  } catch (error) {
-    // logger.error(`Error finding user by email: ${error.message}`);
-    throw error;
-  }
-};
-
-export const createUser  = async (data) => {
-  console.log(data, "data -------");
-  
-  try {
-    const query = await User.create({
-
-    })
-  } catch (error) {
-    throw error
-  }
-}
-
-
-
-
-
-
+src/
+│
+├── api/
+│   ├── axios.js
+│   ├── auth.api.js
+│   ├── product.api.js
+│   └── order.api.js
+│
+├── app/
+│   ├── store.js
+│   ├── provider.jsx
+│   └── router.jsx
+│
+├── assets/
+│   ├── images/
+│   ├── icons/
+│   └── fonts/
+│
+├── components/
+│   ├── Button/
+│   ├── Input/
+│   ├── Modal/
+│   ├── Loader/
+│   └── Navbar/
+│
+├── features/
+│   ├── auth/
+│   │   ├── pages/
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── services.js
+│   │   ├── authSlice.js
+│   │   └── validation.js
+│   │
+│   ├── product/
+│   ├── cart/
+│   ├── order/
+│   └── profile/
+│
+├── hooks/
+│   ├── useAuth.js
+│   ├── useDebounce.js
+│   └── usePagination.js
+│
+├── layouts/
+│   ├── MainLayout.jsx
+│   ├── AuthLayout.jsx
+│   └── AdminLayout.jsx
+│
+├── pages/
+│   ├── Home.jsx
+│   ├── About.jsx
+│   ├── Contact.jsx
+│   └── NotFound.jsx
+│
+├── routes/
+│   ├── PrivateRoute.jsx
+│   ├── PublicRoute.jsx
+│   └── routes.jsx
+│
+├── services/
+│   ├── auth.service.js
+│   ├── token.service.js
+│   └── localStorage.service.js
+│
+├── styles/
+│   ├── globals.css
+│   ├── variables.css
+│   └── tailwind.css
+│
+├── types/
+│
+├── utils/
+│   ├── constants.js
+│   ├── helpers.js
+│   ├── formatDate.js
+│   ├── debounce.js
+│   └── validation.js
+│
+├── context/
+│   ├── ThemeContext.jsx
+│   └── SocketContext.jsx
+│
+├── config/
+│   ├── env.js
+│   └── axiosConfig.js
+│
+├── App.jsx
+├── main.jsx
+└── index.css
