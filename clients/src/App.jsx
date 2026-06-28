@@ -1,5 +1,7 @@
+import AppRouter from "./app/router";
+
 function App() {
-  return <h1>JAI SHREE RAM ❤️</h1>;
+  return <AppRouter />;
 }
 
 export default App;
