@@ -1,5 +1,5 @@
 export let config = {
-    allowedOrigins:[]
+    allowedOrigins:["http://localhost:5173"]
 }
 
  

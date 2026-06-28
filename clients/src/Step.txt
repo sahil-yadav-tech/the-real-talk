@@ -4,4 +4,7 @@ npm install axios react-router-dom @tanstack/react-query react-hook-form zod @ho
 npm install -D tailwindcss @tailwindcss/vite eslint prettier eslint-config-prettier eslint-plugin-react-hooks
 
 //3
+npm install zod @hookform/resolvers
+
+
 
