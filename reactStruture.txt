@@ -1,0 +1,141 @@
+src/
+│
+├── app/
+│   ├── provider.jsx
+│   ├── queryClient.js
+│   └── router.jsx
+│
+├── api/
+│   └── axios.js
+│
+├── assets/
+│   ├── images/
+│   ├── icons/
+│   ├── fonts/
+│   └── svg/
+│
+├── components/
+│   ├── Button/
+│   │   ├── Button.jsx
+│   │   ├── Button.module.css
+│   │   └── index.js
+│   │
+│   ├── Input/
+│   │   ├── Input.jsx
+│   │   ├── Input.module.css
+│   │   └── index.js
+│   │
+│   ├── Loader/
+│   │   ├── Loader.jsx
+│   │   └── index.js
+│   │
+│   ├── Modal/
+│   │   ├── Modal.jsx
+│   │   └── index.js
+│   │
+│   ├── Navbar/
+│   ├── Sidebar/
+│   └── Protected/
+│
+├── config/
+│   ├── env.js
+│   └── app.config.js
+│
+├── constants/
+│   ├── api.js
+│   ├── routes.js
+│   ├── roles.js
+│   └── storage.js
+│
+├── context/
+│   ├── ThemeContext.jsx
+│   └── SocketContext.jsx
+│
+├── features/
+│
+│   ├── auth/
+│   │
+│   │   ├── api/
+│   │   │   └── auth.api.js
+│   │   │
+│   │   ├── components/
+│   │   │   ├── LoginForm.jsx
+│   │   │   ├── RegisterForm.jsx
+│   │   │   └── OtpForm.jsx
+│   │   │
+│   │   ├── hooks/
+│   │   │   ├── useLogin.js
+│   │   │   ├── useRegister.js
+│   │   │   ├── useVerifyOtp.js
+│   │   │   ├── useLogout.js
+│   │   │   └── useCheckAuth.js
+│   │   │
+│   │   ├── pages/
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
+│   │   │   └── VerifyOtp.jsx
+│   │   │
+│   │   ├── schemas/
+│   │   │   └── auth.schema.js
+│   │   │
+│   │   ├── services/
+│   │   │   └── auth.service.js
+│   │   │
+│   │   ├── utils/
+│   │   │   └── auth.helper.js
+│   │   │
+│   │   └── index.js
+│   │
+│   ├── product/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   ├── pages/
+│   │   ├── services/
+│   │   └── schemas/
+│   │
+│   ├── cart/
+│   │
+│   ├── order/
+│   │
+│   └── profile/
+│
+├── hooks/
+│   ├── useDebounce.js
+│   ├── usePagination.js
+│   ├── useInfiniteScroll.js
+│   └── useLocalStorage.js
+│
+├── layouts/
+│   ├── AuthLayout.jsx
+│   ├── MainLayout.jsx
+│   └── AdminLayout.jsx
+│
+├── routes/
+│   ├── routeConfig.js
+│   ├── PublicRoute.jsx
+│   └── PrivateRoute.jsx
+│
+├── services/
+│   ├── token.service.js
+│   ├── storage.service.js
+│   └── cookie.service.js
+│
+├── styles/
+│   ├── globals.css
+│   ├── variables.css
+│   ├── reset.css
+│   └── tailwind.css
+│
+├── utils/
+│   ├── helpers.js
+│   ├── debounce.js
+│   ├── formatDate.js
+│   ├── formatCurrency.js
+│   ├── validators.js
+│   └── logger.js
+│
+├── App.jsx
+├── main.jsx
+└── index.css
+my stur

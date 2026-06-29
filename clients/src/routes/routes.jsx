@@ -16,47 +16,21 @@ export const publicRoutes = [
         element: <Home />,
       },
 
-      // {
-      //   path: "/about",
-      //   element: <About />,
-      // },
-
-      // {
-      //   path: "/contact",
-      //   element: <Contact />,
-      // },
-
-      // {
-      //   path: "/products",
-      //   element: <Products />,
-      // },
-    ],
-  },
-
-  {
-    element: <AuthLayout />,
-
-    children: [
-      // {
-      //   path: "/login",
-      //   element: <Login />,
-      // },
-
       {
-        path: "/register",
-        element: <Register />,
-      },
+        element: <AuthLayout />,
 
-      // {
-      //   path: "/forgot-password",
-      //   element: <ForgotPassword />,
-      // },
+        children: [
+          {
+            path: "/register",
+            element: <Register />,
+          },
+        ],
+      },
     ],
   },
 ];
 
-
-export const privateRoutes = []
+export const privateRoutes = [];
 //   {
 //     element: <ProtectedRoute />,
 
@@ -95,7 +69,6 @@ export const privateRoutes = []
 //   },
 // ];
 
-
 // export const adminRoutes = [
 //   {
 //     element: <AdminProtectedRoute />,
@@ -129,8 +102,6 @@ export const privateRoutes = []
 //     ],
 //   },
 // ];
-
-
 
 export const commonRoutes = [
   // {
