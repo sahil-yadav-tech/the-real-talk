@@ -1,19 +1,26 @@
-import { Outlet } from "react-router-dom";
+import { useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
 
 export default function AuthLayout() {
+  const navigate = useNavigate();
+  // const logIn = false; // This should come from your auth context/state
+
+  // useEffect(() => {
+  //   if (logIn) {
+  //     navigate("/", { replace: true });
+  //   }
+  // }, [logIn, navigate]); 
+
+  // if (logIn) {
+  //   return null; 
+  // }
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100">
-
-      <div className="w-full max-w-md rounded-lg bg-white shadow-lg p-8">
-
-        <h1 className="text-3xl font-bold text-center mb-8">
-          Authentication
-        </h1>
+    <div className="min-h-screen flex items-center justify-center ">
+      <div className="w-full ">
+        <h1 className="">Authentication</h1>
 
         <Outlet />
-
       </div>
-
     </div>
   );
 }

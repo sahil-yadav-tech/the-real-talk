@@ -1,14 +1,16 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import Button from "../../../components/Button";
-import Input from "../../../components/Input";
+import Button from "../../../../components/ui/Button";
+import Input from "../../../../components/ui/Input";
 
-import { registerSchema } from "../schemas/auth.schema";
-import { useRegister } from "../hooks/useRegister";
+import { registerSchema } from "../../schemas/auth.schema";
+import { useRegister } from "../../hooks/useRegister";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 export default function RegisterForm() {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -36,9 +38,9 @@ export default function RegisterForm() {
 
     mutate(data, {
       onSuccess: (response) => {
-        console.log(response);
+        console.log(response, "hey sucess in ");
         toast.success(data.message);
-
+        navigate("/verify-otp");
         // Next Sprint
         // toast.success(response.message)
         // navigate("/verify-otp")

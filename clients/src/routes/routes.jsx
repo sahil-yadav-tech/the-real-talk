@@ -1,10 +1,11 @@
 import Home from "../pages/Home";
 import NotFound from "../pages/NotFound";
 
-import Register from "../features/auth/pages/Register";
+import Register from "../features/auth/pages/Register/Register";
 
 import MainLayout from "../layouts/MainLayout";
 import AuthLayout from "../layouts/AuthLayout";
+import VerifyOtp from "../features/auth/pages/Verify/VerifyOtp";
 
 export const publicRoutes = [
   {
@@ -24,13 +25,29 @@ export const publicRoutes = [
             path: "/register",
             element: <Register />,
           },
+            {
+            path: "/verify-otp",
+            element: <VerifyOtp />,
+          },
         ],
       },
     ],
   },
 ];
 
-export const privateRoutes = [];
+export const privateRoutes = [
+  // {
+  //   element: <MainLayout />,
+
+  //   children: [
+  //     {
+  //       path: "/",
+  //       element: <Home />,
+  //     },
+  //   ],
+  // },
+];
+
 //   {
 //     element: <ProtectedRoute />,
 
