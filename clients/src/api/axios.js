@@ -9,4 +9,17 @@ const axiosInstance = axios.create({
   },
 });
 
+axiosInstance.interceptors.response.use(
+    (response) => response,
+
+    (error) => {
+
+        return Promise.reject({
+            message: error.response?.data?.message,
+            status: error.response?.status,
+        });
+
+    }
+);
+
 export default axiosInstance;

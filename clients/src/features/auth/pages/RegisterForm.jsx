@@ -6,6 +6,7 @@ import Input from "../../../components/Input";
 
 import { registerSchema } from "../schemas/auth.schema";
 import { useRegister } from "../hooks/useRegister";
+import toast from "react-hot-toast";
 
 export default function RegisterForm() {
   const {
@@ -29,11 +30,14 @@ export default function RegisterForm() {
 
   const { mutate, isPending } = useRegister();
   const onSubmit = (data) => {
+    console.log(data, "data white submit form");
+    console.log(register("firstName"));
     delete data.confirmPassword;
 
     mutate(data, {
       onSuccess: (response) => {
         console.log(response);
+        toast.success(data.message);
 
         // Next Sprint
         // toast.success(response.message)
@@ -41,10 +45,14 @@ export default function RegisterForm() {
       },
 
       onError: (error) => {
+        console.log(error, "error in On error ");
+        toast.error(error.message);
         console.log(error.response?.data);
       },
     });
   };
+
+  console.log(errors, "errors");
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
