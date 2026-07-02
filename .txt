@@ -1,204 +1,16 @@
-import AppRouter from "./app/router";
-
-function App() {
-  return <AppRouter />;
-}
-
-export default App;
-
-import { Routes, Route } from "react-router-dom";
-
-import {
-  publicRoutes,
-  privateRoutes,
-  commonRoutes,
-} from "../routes/routes";
-
-// Recursive function
-function renderRoutes(routes) {
-  return routes.map((route, index) => (
-    <Route
-      key={route.path || index}
-      path={route.path}
-      element={route.element}
-    >
-      {route.children && renderRoutes(route.children)}
-    </Route>
-  ));
-}
-
-export default function AppRouter() {
-  return (
-    <Routes>
-      {renderRoutes(publicRoutes)}
-
-      {renderRoutes(privateRoutes)}
-
-      {renderRoutes(commonRoutes)}
-    </Routes>
-  );
-}
-
-
-import Home from "../pages/Home";
-import NotFound from "../pages/NotFound";
-
-import Register from "../features/auth/pages/Register";
-
-import MainLayout from "../layouts/MainLayout";
-import AuthLayout from "../layouts/AuthLayout";
-
-export const publicRoutes = [
-  {
-    element: <MainLayout />,
-
-    children: [
-      {
-        path: "/",
-        element: <Home />,
-      },
-
-      // {
-      //   path: "/about",
-      //   element: <About />,
-      // },
-
-      // {
-      //   path: "/contact",
-      //   element: <Contact />,
-      // },
-
-      // {
-      //   path: "/products",
-      //   element: <Products />,
-      // },
-    ],
-  },
-
-  {
-    element: <AuthLayout />,
-
-    children: [
-      // {
-      //   path: "/login",
-      //   element: <Login />,
-      // },
-
-      {
-        path: "/register",
-        element: <Register />,
-      },
-
-      // {
-      //   path: "/forgot-password",
-      //   element: <ForgotPassword />,
-      // },
-    ],
-  },
-];
-
-
-export const privateRoutes = []
-//   {
-//     element: <ProtectedRoute />,
-
-//     children: [
-//       {
-//         element: <DashboardLayout />,
-
-//         children: [
-//           {
-//             path: "/dashboard",
-//             element: <Dashboard />,
-//           },
-
-//           {
-//             path: "/profile",
-//             element: <Profile />,
-//           },
-
-//           {
-//             path: "/orders",
-//             element: <Orders />,
-//           },
-
-//           {
-//             path: "/wishlist",
-//             element: <Wishlist />,
-//           },
-
-//           {
-//             path: "/settings",
-//             element: <Settings />,
-//           },
-//         ],
-//       },
-//     ],
-//   },
-// ];
-
-
-// export const adminRoutes = [
-//   {
-//     element: <AdminProtectedRoute />,
-
-//     children: [
-//       {
-//         element: <AdminLayout />,
-
-//         children: [
-//           {
-//             path: "/admin",
-//             element: <AdminDashboard />,
-//           },
-
-//           {
-//             path: "/admin/users",
-//             element: <Users />,
-//           },
-
-//           {
-//             path: "/admin/products",
-//             element: <AdminProducts />,
-//           },
-
-//           {
-//             path: "/admin/orders",
-//             element: <AdminOrders />,
-//           },
-//         ],
-//       },
-//     ],
-//   },
-// ];
-
-
-
-export const commonRoutes = [
-  // {
-  //   path: "*",
-  //   element: <NotFound />,
-  // },
-];
-
-
-import RegisterForm from "./RegisterForm";
-
-export default function Register() {
-  return <RegisterForm />;
-}
-
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-import Button from "../../../components/Button";
-import Input from "../../../components/Input";
+import Button from "../../../../components/ui/Button";
+import Input from "../../../../components/ui/Input";
 
-import { registerSchema } from "../schemas/auth.schema";
-import { useRegister } from "../hooks/useRegister";
+import { registerSchema } from "../../schemas/auth.schema";
+import { useRegister } from "../../hooks/useRegister";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 export default function RegisterForm() {
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -220,22 +32,30 @@ export default function RegisterForm() {
 
   const { mutate, isPending } = useRegister();
   const onSubmit = (data) => {
+    console.log(data, "data white submit form");
+    console.log(register("firstName"));
     delete data.confirmPassword;
 
     mutate(data, {
       onSuccess: (response) => {
-        console.log(response);
-
+        console.log(response, "hey sucess in ");
+        toast.success(data.message);
+         localStorage.setItem("verifyEmail", data.email);
+        navigate("/verify-otp");
         // Next Sprint
         // toast.success(response.message)
         // navigate("/verify-otp")
       },
 
       onError: (error) => {
+        console.log(error, "error in On error ");
+        toast.error(error.message);
         console.log(error.response?.data);
       },
     });
   };
+
+  console.log(errors, "errors");
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -286,8 +106,96 @@ export default function RegisterForm() {
 }
 
 
+import { z } from "zod";
+
+export const registerSchema = z
+  .object({
+    firstName: z
+      .string()
+      .trim()
+      .min(2, "First name must be at least 2 characters")
+      .max(50),
+
+    lastName: z
+      .string()
+      .trim()
+      .min(2, "Last name must be at least 2 characters")
+      .max(50),
+
+    email: z.string().trim().email("Invalid email address"),
+
+    phoneNumber: z.string().regex(/^[6-9]\d{9}$/, "Invalid phone number"),
+
+    password: z
+      .string()
+      .min(8, "Password must contain at least 8 characters")
+      .regex(/[A-Z]/, "Must contain one uppercase letter")
+      .regex(/[a-z]/, "Must contain one lowercase letter")
+      .regex(/[0-9]/, "Must contain one number")
+      .regex(/[!@#$%^&*]/, "Must contain one special character"),
+
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match",
+  });
+
+export const otpSchema = z.object({
+  otp: z
+    .string()
+    .trim()
+    .length(6, "OTP must be exactly 6 digits")
+    .regex(/^\d+$/, "OTP must contain only numbers"),
+});
+
+
+import { forwardRef } from "react";
+
+const Input = forwardRef(
+  (
+    {
+      label,
+      type = "text",
+      placeholder,
+      error,
+      className = "",
+      ...props
+    },
+    ref
+  ) => {
+    return (
+      <div className="mb-5">
+        {label && (
+          <label className="block mb-2 font-medium">
+            {label}
+          </label>
+        )}
+
+        <input
+          ref={ref}
+          type={type}
+          placeholder={placeholder}
+          className={`w-full border rounded-lg px-4 py-3 ${className}`}
+          {...props}
+        />
+
+        {error && (
+          <p className="text-red-500 text-sm mt-1">
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  }
+);
+
+Input.displayName = "Input";
+
+export default Input;
+
 import { useMutation } from "@tanstack/react-query";
-import { registerService } from "../services/auth.service";
+import { registerService, verifyOtpServices } from "../services/auth.service";
 
 export const useRegister = () => {
   return useMutation({
@@ -295,31 +203,209 @@ export const useRegister = () => {
   });
 };
 
+export const useverifyOtp  = () =>{
+  return useMutation({
+    mutationFn:verifyOtpServices
+  })
+}
 
-import { registerApi } from "../api/auth.api";
+export const useResendOtp =() =>{
+  return useMutation({
+    
+  })
+}
 
-export const registerService = async (data) => {
-  return await registerApi(data);
+
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import toast from "react-hot-toast";
+
+import Input from "../../../../components/ui/Input";
+import Button from "../../../../components/ui/Button";
+
+import { otpSchema } from "../../schemas/auth.schema";
+import {
+  useverifyOtp,
+  useResendOtp,
+} from "../../hooks/useRegister";
+
+const VerifyForm = () => {
+  const navigate = useNavigate();
+
+  const email = localStorage.getItem("verifyEmail") || "";
+
+  const getRemainingSeconds = () => {
+    const expiry = Number(localStorage.getItem("otpExpiry"));
+
+    if (!expiry) return 0;
+
+    return Math.max(
+      0,
+      Math.floor((expiry - Date.now()) / 1000)
+    );
+  };
+
+  const [seconds, setSeconds] = useState(getRemainingSeconds());
+
+  const { mutate, isPending } = useverifyOtp();
+
+  const {
+    mutate: resendOtp,
+    isPending: resendLoading,
+  } = useResendOtp();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm({
+    resolver: zodResolver(otpSchema),
+    mode: "onChange",
+    defaultValues: {
+      otp: "",
+    },
+  });
+
+  useEffect(() => {
+    if (!email) {
+      navigate("/register");
+    }
+  }, [email, navigate]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const remaining = getRemainingSeconds();
+
+      setSeconds(remaining);
+
+      if (remaining <= 0) {
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const onSubmit = (data) => {
+    mutate(
+      {
+        email,
+        otp: data.otp,
+      },
+      {
+        onSuccess: (response) => {
+          toast.success(response.message);
+
+          localStorage.removeItem("verifyEmail");
+          localStorage.removeItem("otpExpiry");
+
+          navigate("/login");
+        },
+
+        onError: (error) => {
+          toast.error(error.message);
+        },
+      }
+    );
+  };
+
+  const handleResend = () => {
+    resendOtp(
+      {
+        email,
+      },
+      {
+        onSuccess: (response) => {
+          toast.success(response.message);
+
+          const expiry = Date.now() + 90 * 1000;
+
+          localStorage.setItem(
+            "otpExpiry",
+            expiry.toString()
+          );
+
+          setSeconds(90);
+        },
+
+        onError: (error) => {
+          toast.error(error.message);
+        },
+      }
+    );
+  };
+
+  const minutes = Math.floor(seconds / 60);
+  const remainingSeconds = seconds % 60;
+
+  return (
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="space-y-5"
+    >
+      <Input
+        label="Email"
+        value={email}
+        disabled
+      />
+
+      <Input
+        label="OTP"
+        placeholder="Enter OTP"
+        type="text"
+        inputMode="numeric"
+        maxLength={6}
+        autoComplete="one-time-code"
+        error={errors.otp?.message}
+        {...register("otp", {
+          onChange: (e) => {
+            e.target.value = e.target.value
+              .replace(/\D/g, "")
+              .slice(0, 6);
+          },
+        })}
+      />
+
+      {seconds > 0 ? (
+        <p className="text-sm text-gray-500">
+          Resend OTP in{" "}
+          <strong>
+            {minutes}:
+            {remainingSeconds
+              .toString()
+              .padStart(2, "0")}
+          </strong>
+        </p>
+      ) : (
+        <button
+          type="button"
+          onClick={handleResend}
+          disabled={resendLoading}
+          className="text-blue-600 hover:underline"
+        >
+          {resendLoading
+            ? "Sending..."
+            : "Resend OTP"}
+        </button>
+      )}
+
+      <Button
+        type="submit"
+        loading={isPending}
+        disabled={!isValid}
+      >
+        Verify OTP
+      </Button>
+    </form>
+  );
 };
 
-
-import axiosInstance from "../../../api/axios";
-
-export const registerApi = async (payload) => {
-  const response = await axiosInstance.post("/auth/register", payload);
-  return response.data;
-};
+export default VerifyForm;
 
 
-import axios from "axios";
+here i want like this if user register on the registration form 
+redirect to verify otp page and set the email pre filled and give otp box to put otpbut when user register and refirect to verfiy page show counter as well and user and after 1:30 min or 90 sec show resend button 
 
-const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: 10000,
-  withCredentials: true, 
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-export default axiosInstance;
+but suppose user refresh the page dont refresh the count its still normal and spposue counter on 1:00 remiang user refresh the page dont reset the time again 1:30 give actual time left 

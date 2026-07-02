@@ -12,3 +12,9 @@ export const useverifyOtp  = () =>{
     mutationFn:verifyOtpServices
   })
 }
+
+export const useResendOtp =() =>{
+  return useMutation({
+    
+  })
+}
