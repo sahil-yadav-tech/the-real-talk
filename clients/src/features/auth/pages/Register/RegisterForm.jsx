@@ -40,6 +40,7 @@ export default function RegisterForm() {
       onSuccess: (response) => {
         console.log(response, "hey sucess in ");
         toast.success(data.message);
+         localStorage.setItem("verifyEmail", data.email);
         navigate("/verify-otp");
         // Next Sprint
         // toast.success(response.message)
