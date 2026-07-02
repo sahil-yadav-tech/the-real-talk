@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,15 +8,20 @@ import Input from "../../../../components/ui/Input";
 import Button from "../../../../components/ui/Button";
 
 import { otpSchema } from "../../schemas/auth.schema";
-import { useverifyOtp, useResendOtp } from "../../hooks/useRegister";
+import {
+  useverifyOtp,
+  useResendOtp,
+} from "../../hooks/useRegister";
 
 const VerifyForm = () => {
   const navigate = useNavigate();
 
-  // Add a ref to track if verification is in progress
-  const isVerifying = useRef(false);
-
-  const email = localStorage.getItem("verifyEmail") || "";
+  // Read once on mount — do NOT recompute from localStorage on every render.
+  // Recomputing caused a race: onSuccess clears "verifyEmail" from localStorage,
+  // then a re-render (triggered by isPending flipping to false) recomputed
+  // email as "", which fired the guard effect below and redirected to
+  // /register right after navigate("/login") had already been called.
+  const [email] = useState(() => localStorage.getItem("verifyEmail") || "");
 
   const getRemainingSeconds = () => {
     const expiry = Number(localStorage.getItem("otpExpiry"));
@@ -29,7 +34,10 @@ const VerifyForm = () => {
 
   const { mutate, isPending } = useverifyOtp();
 
-  const { mutate: resendOtp, isPending: resendLoading } = useResendOtp();
+  const {
+    mutate: resendOtp,
+    isPending: resendLoading,
+  } = useResendOtp();
 
   const {
     register,
@@ -43,9 +51,10 @@ const VerifyForm = () => {
     },
   });
 
-  // Check if email exists - but skip if verification is in progress
+  // Check if email exists (only runs meaningfully on mount now,
+  // since `email` is stable state, not re-read from localStorage each render)
   useEffect(() => {
-    if (!email && !isVerifying.current) {
+    if (!email) {
       navigate("/register");
     }
   }, [email, navigate]);
@@ -73,9 +82,6 @@ const VerifyForm = () => {
   }, []);
 
   const onSubmit = (data) => {
-    // Set verifying flag to true
-    isVerifying.current = true;
-
     mutate(
       {
         email,
@@ -89,18 +95,13 @@ const VerifyForm = () => {
           localStorage.removeItem("verifyEmail");
           localStorage.removeItem("otpExpiry");
 
-          // Reset verifying flag
-          isVerifying.current = false;
-
           // Navigate to login
-          navigate("/login", { replace: true });
+          navigate("/login");
         },
         onError: (error) => {
           toast.error(error.message);
-          // Reset verifying flag on error so user can retry
-          isVerifying.current = false;
         },
-      },
+      }
     );
   };
 
@@ -119,7 +120,7 @@ const VerifyForm = () => {
         onError: (error) => {
           toast.error(error.message);
         },
-      },
+      }
     );
   };
 
