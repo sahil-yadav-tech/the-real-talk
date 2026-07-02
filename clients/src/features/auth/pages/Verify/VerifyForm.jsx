@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,13 +8,13 @@ import Input from "../../../../components/ui/Input";
 import Button from "../../../../components/ui/Button";
 
 import { otpSchema } from "../../schemas/auth.schema";
-import {
-  useverifyOtp,
-  useResendOtp,
-} from "../../hooks/useRegister";
+import { useverifyOtp, useResendOtp } from "../../hooks/useRegister";
 
 const VerifyForm = () => {
   const navigate = useNavigate();
+
+  // Add a ref to track if verification is in progress
+  const isVerifying = useRef(false);
 
   const email = localStorage.getItem("verifyEmail") || "";
 
@@ -29,10 +29,7 @@ const VerifyForm = () => {
 
   const { mutate, isPending } = useverifyOtp();
 
-  const {
-    mutate: resendOtp,
-    isPending: resendLoading,
-  } = useResendOtp();
+  const { mutate: resendOtp, isPending: resendLoading } = useResendOtp();
 
   const {
     register,
@@ -46,12 +43,14 @@ const VerifyForm = () => {
     },
   });
 
+  // Check if email exists - but skip if verification is in progress
   useEffect(() => {
-    if (!email) {
+    if (!email && !isVerifying.current) {
       navigate("/register");
     }
   }, [email, navigate]);
 
+  // Timer logic
   useEffect(() => {
     // If no expiry exists, set one
     if (!localStorage.getItem("otpExpiry")) {
@@ -60,24 +59,23 @@ const VerifyForm = () => {
       setSeconds(90);
     }
 
-    // Update seconds every second
     const interval = setInterval(() => {
       const remaining = getRemainingSeconds();
       setSeconds(remaining);
 
-      // Stop interval when timer reaches 0
       if (remaining <= 0) {
         clearInterval(interval);
-        // Remove expiry from localStorage when timer ends
         localStorage.removeItem("otpExpiry");
       }
     }, 1000);
 
-    // Cleanup interval on unmount
     return () => clearInterval(interval);
-  }, []); // Empty dependency array - runs once on mount
+  }, []);
 
   const onSubmit = (data) => {
+    // Set verifying flag to true
+    isVerifying.current = true;
+
     mutate(
       {
         email,
@@ -86,14 +84,23 @@ const VerifyForm = () => {
       {
         onSuccess: (response) => {
           toast.success(response.message);
+
+          // Clear localStorage
           localStorage.removeItem("verifyEmail");
           localStorage.removeItem("otpExpiry");
-          navigate("/");
+
+          // Reset verifying flag
+          isVerifying.current = false;
+
+          // Navigate to login
+          navigate("/login", { replace: true });
         },
         onError: (error) => {
           toast.error(error.message);
+          // Reset verifying flag on error so user can retry
+          isVerifying.current = false;
         },
-      }
+      },
     );
   };
 
@@ -112,7 +119,7 @@ const VerifyForm = () => {
         onError: (error) => {
           toast.error(error.message);
         },
-      }
+      },
     );
   };
 
