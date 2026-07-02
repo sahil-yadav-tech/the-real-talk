@@ -1,14 +1,16 @@
-import React from "react";
+import React from 'react'
+import { useForm } from 'react-hook-form'
 
 const VerifyForm = () => {
+  const {} = useForm({
+    mode:"onTouched",
+    defaultValues:{
+      
+    }
+  })
   return (
-    <div className=" border-2 border-orange-400 min-h-screen  p-4">
-      Lorem ipsum dolor sit amet, consectetur adipisicing elit. Facilis
-      officiis, hic assumenda cupiditate rerum vitae facere obcaecati vel,
-      consectetur explicabo doloribus asperiores reprehenderit ab. Porro,
-      inventore deserunt? Temporibus, maiores deleniti.
-    </div>
-  );
-};
+    <div>VerifyForm</div>
+  )
+}
 
-export default VerifyForm;
+export default VerifyForm

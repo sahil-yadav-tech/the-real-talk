@@ -6,6 +6,7 @@ import Register from "../features/auth/pages/Register/Register";
 import MainLayout from "../layouts/MainLayout";
 import AuthLayout from "../layouts/AuthLayout";
 import VerifyOtp from "../features/auth/pages/Verify/VerifyOtp";
+import Login from "../features/auth/pages/Login/Login";
 
 export const publicRoutes = [
   {
@@ -25,9 +26,13 @@ export const publicRoutes = [
             path: "/register",
             element: <Register />,
           },
-            {
+          {
             path: "/verify-otp",
             element: <VerifyOtp />,
+          },
+                {
+            path: "/login",
+            element: <Login />,
           },
         ],
       },
@@ -38,7 +43,6 @@ export const publicRoutes = [
 export const privateRoutes = [
   // {
   //   element: <MainLayout />,
-
   //   children: [
   //     {
   //       path: "/",

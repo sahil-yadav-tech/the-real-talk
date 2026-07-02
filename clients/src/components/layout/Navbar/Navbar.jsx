@@ -1,6 +1,5 @@
 // components/layout/Navbar/Navbar.jsx
 import React, { useState } from "react";
-// import { useAuth } from "@/hooks/useAuth";
 import { NAV_LINKS } from "./constants";
 import Logo from "./Logo";
 import DesktopNavLinks from "./DesktopNavLinks";
@@ -8,10 +7,13 @@ import SearchBar from "./SearchBar";
 import RightSection from "./RightSection";
 import MobileToggleButton from "./MobileToggleButton";
 import MobileMenu from "./MobileMenu";
+import useAuth from "../../../hooks/useAuth";
 
 export default function Navbar() {
-  // const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  console.log(isAuthenticated, user, " isAuthenticated, user ");
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -34,17 +36,20 @@ export default function Navbar() {
         <SearchBar />
 
         {/* Right Section - Auth/Profile */}
-        {/* <RightSection isAuthenticated={isAuthenticated} user={user} /> */}
+        <RightSection isAuthenticated={isAuthenticated} user={user} />
 
         {/* Mobile Toggle Button */}
-        <MobileToggleButton isOpen={isMobileMenuOpen} toggle={toggleMobileMenu} />
+        <MobileToggleButton
+          isOpen={isMobileMenuOpen}
+          toggle={toggleMobileMenu}
+        />
       </nav>
 
       {/* Mobile Menu */}
       <MobileMenu
         isOpen={isMobileMenuOpen}
         links={NAV_LINKS}
-        // isAuthenticated={isAuthenticated}
+        isAuthenticated={isAuthenticated}
         onClose={closeMobileMenu}
       />
     </header>

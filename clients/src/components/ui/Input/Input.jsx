@@ -7,6 +7,7 @@ const Input = forwardRef(
       type = "text",
       placeholder,
       error,
+      className = "",
       ...props
     },
     ref
@@ -23,7 +24,7 @@ const Input = forwardRef(
           ref={ref}
           type={type}
           placeholder={placeholder}
-          className="w-full border rounded-lg px-4 py-3"
+          className={`w-full border rounded-lg px-4 py-3 ${className}`}
           {...props}
         />
 

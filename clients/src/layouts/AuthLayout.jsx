@@ -9,16 +9,14 @@ export default function AuthLayout() {
   //   if (logIn) {
   //     navigate("/", { replace: true });
   //   }
-  // }, [logIn, navigate]); 
+  // }, [logIn, navigate]);
 
   // if (logIn) {
-  //   return null; 
+  //   return null;
   // }
   return (
     <div className="min-h-screen flex items-center justify-center ">
-      <div className="w-full ">
-        <h1 className="">Authentication</h1>
-
+      <div className="w-full flex items-center justify-center ">
         <Outlet />
       </div>
     </div>
