@@ -1,15 +1,14 @@
-// import logo from "../../../assets/Logo.png";
 
 const Logo = () => {
-    return (
-        <div className="flex justify-center mb-8">
-            <img
-                // src={logo}
-                alt="logo"
-                className="w-12 h-12"
-            />
-        </div>
-    );
+  return (
+    <div className="flex justify-center items-center py-4  ">
+      <img
+        src="../../../assets/Logo.png"
+        alt="logo"
+        className="w-4 h-4  p-4 " // Hide the img, show background instead
+      />
+    </div>
+  );
 };
 
 export default Logo;

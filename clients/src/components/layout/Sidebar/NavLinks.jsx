@@ -1,11 +1,10 @@
 import NavItem from "./NavItem";
-import { sidebarLinks } from "./sidebarData";
+import { SidebarLinks } from "./SidebarData";
 
 const NavLinks = () => {
     return (
         <div className="flex flex-col gap-6 items-center mt-6">
-
-            {sidebarLinks.map((item) => (
+            {SidebarLinks.map((item) => (
                 <NavItem
                     key={item.id}
                     Icon={item.icon}

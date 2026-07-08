@@ -1,5 +1,6 @@
 import {
-    MessageSquare,
+ MessageSquareText ,
+ UserLock ,
     Users,
     UserRound,
     Circle,
@@ -8,15 +9,15 @@ import {
     Moon
 } from "lucide-react";
 
-export const sidebarLinks = [
+export const SidebarLinks = [
     {
         id: 1,
-        icon: MessageSquare,
+        icon: MessageSquareText,
         active: true,
     },
     {
         id: 2,
-        icon: UserRound,
+        icon: UserLock,
     },
     {
         id: 3,
@@ -34,8 +35,5 @@ export const sidebarLinks = [
         id: 6,
         icon: Settings,
     },
-    {
-        id: 7,
-        icon: Moon,
-    },
+
 ];

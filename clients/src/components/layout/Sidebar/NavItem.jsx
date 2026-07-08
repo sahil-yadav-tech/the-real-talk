@@ -1,26 +1,16 @@
-import Logo from "./Logo";
-import NavLinks from "./NavLinks";
-
-const Sidebar = () => {
+const NavItem = ({ Icon, active }) => {
     return (
-        <aside className="w-24 h-screen border-r bg-white flex flex-col">
-
-            <Logo />
-
-            <NavLinks />
-
-            <div className="mt-auto flex justify-center pb-6">
-
-                <img
-                    src="https://i.pravatar.cc/50"
-                    className="w-11 h-11 rounded-full"
-                    alt=""
-                />
-
-            </div>
-
-        </aside>
+        <button
+            className={`w-10 h-10 rounded-md flex justify-center items-center transition-all
+            ${
+                active
+                    ? "bg-violet-600 text-white"
+                    : "text-gray-800 hover:bg-gray-100"
+            }`}
+        >
+            <Icon size={22} />
+        </button>
     );
 };
 
-export default Sidebar;
+export default NavItem;
