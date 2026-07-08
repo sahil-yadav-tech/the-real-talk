@@ -6,9 +6,9 @@ import {
 
 const ChatCard = ({ chat }) => {
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm flex justify-between hover:shadow-md transition cursor-pointer">
+    <div className="bg-white rounded-md p-4 shadow-sm flex justify-between hover:shadow-md transition cursor-pointer">
 
-      <div className="flex">
+       <div className="flex">
 
         <div className="relative">
 
@@ -19,19 +19,19 @@ const ChatCard = ({ chat }) => {
           ) : (
             <img
               src={chat.image}
-              className="w-16 h-16 rounded-full object-cover"
+              className="w-12 h-12 rounded-full object-cover"
             />
           )}
 
           {chat.online && (
-            <span className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-400 rounded-full border-2 border-white"></span>
+            <span className="absolute bottom-1 right-1 w-3 h-3 bg-emerald-400 rounded-full border-2 border-white"></span>
           )}
 
         </div>
 
         <div className="ml-4">
 
-          <h3 className="font-bold text-2xl">
+          <h3 className="text-black ">
             {chat.name}
           </h3>
 
@@ -44,7 +44,7 @@ const ChatCard = ({ chat }) => {
               />
             )}
 
-            <p className="text-gray-500 text-lg">
+            <p className="text-gray-500 ">
               {chat.message}
             </p>
 
@@ -77,7 +77,7 @@ const ChatCard = ({ chat }) => {
           )}
 
           {chat.unread > 0 && (
-            <div className="bg-pink-500 text-white rounded-full px-3 py-1 text-sm font-bold">
+            <div className="bg-red-500 text-white rounded-full px-3 py-1 text-sm font-bold">
               {chat.unread}
             </div>
           )}

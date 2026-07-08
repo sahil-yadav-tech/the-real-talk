@@ -2,7 +2,7 @@ import { Plus, EllipsisVertical } from "lucide-react";
 
 const ChatHeader = () => {
   return (
-    <div className="flex items-center justify-between py-6 px-4 ">
+    <div className="flex items-center justify-between py-4 px-4 ">
       <h1 className="text-[20px] font-bold text-gray-600">Chats</h1>
 
       <div className="flex items-center gap-2">
