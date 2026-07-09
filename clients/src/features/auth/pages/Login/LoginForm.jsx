@@ -4,9 +4,16 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useLogin } from "../../hooks/useRegister";
 import toast from "react-hot-toast";
+import { useDispatch, useSelector } from "react-redux";
+import { setUser } from "../../../../store/slices/userSlice";
 
 const LoginForm = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // const data = useSelector((state) => {
+  //   console.log(state, "state");
+  // })
 
   const {
     register,
@@ -32,7 +39,12 @@ const LoginForm = () => {
     console.log(data, "data in login");
     mutate(data, {
       onSuccess: (data) => {
-        console.log(data, "data in sucess");
+        // console.log(data?.data?.user, "data in sucess");
+        dispatch(setUser(data?.data?.user));
+        toast.success(data.message);
+        setTimeout(() => {
+          navigate("/");
+        }, 2000);
       },
       onError: (error) => {
         console.log(error, "error in On error ");

@@ -2,11 +2,13 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { BrowserRouter } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-
+import { Provider } from "react-redux";
 import { queryClient } from "./queryClient";
+import store from "../store";
 
 export default function AppProvider({ children }) {
   return (
+      <Provider store={store}>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         {children}
@@ -22,6 +24,7 @@ export default function AppProvider({ children }) {
 
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
+    </Provider>
   );
 }
 
