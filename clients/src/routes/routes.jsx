@@ -7,16 +7,14 @@ import MainLayout from "../layouts/MainLayout";
 import AuthLayout from "../layouts/AuthLayout";
 import VerifyOtp from "../features/auth/pages/Verify/VerifyOtp";
 import Login from "../features/auth/pages/Login/Login";
+import ProtectedRoute from "./ProtectedRoute";
 
 export const publicRoutes = [
   {
     element: <MainLayout />,
 
     children: [
-      {
-        path: "/",
-        element: <Home />,
-      },
+
 
       {
         element: <AuthLayout />,
@@ -41,15 +39,22 @@ export const publicRoutes = [
 ];
 
 export const privateRoutes = [
-  // {
-  //   element: <MainLayout />,
-  //   children: [
-  //     {
-  //       path: "/",
-  //       element: <Home />,
-  //     },
-  //   ],
-  // },
+  {
+    element: <ProtectedRoute />,
+
+    children: [
+      {
+        element: <MainLayout />,
+
+        children: [
+          {
+            path: "/",
+            element: <Home />,
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 //   {
