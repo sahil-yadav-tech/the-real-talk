@@ -1,411 +1,311 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+//PRODUCER CODE 
 
-import Button from "../../../../components/ui/Button";
-import Input from "../../../../components/ui/Input";
+import amqplib from "amqplib";
 
-import { registerSchema } from "../../schemas/auth.schema";
-import { useRegister } from "../../hooks/useRegister";
-import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+let connection = null;
+let confirmChannel = null;
+let reconnecting = false;
 
-export default function RegisterForm() {
-  const navigate = useNavigate();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(registerSchema),
+export const EXCHANGES = {
+  SEND_OTP: "SEND_OTP",
+};
 
-    mode: "onTouched",
+const reconnect = () => {
+  if (reconnecting) return;
+  reconnecting = true;
+  console.log("Reconnecting RabbitMQ in 5 seconds...");
+  setTimeout(async () => {
+    reconnecting = false;
+    await connectRabbitMq();
+  }, 5000);
+};
 
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      phoneNumber: "",
-      password: "",
-      confirmPassword: "",
-    },
+export const connectRabbitMq = async () => {
+  try {
+    // connection = await amqplib.connect({
+   connection = await amqplib.connect(process.env.RABBITMQ_URL)
+    //   protocol: "amqp",
+    //   hostname: process.env.RABBITMQ_HOST || "localhost",
+    //   port: parseInt(process.env.RABBITMQ_PORT || "5672"),
+    //   username: process.env.RABBITMQ_USER || "admin",
+    //   password: process.env.RABBITMQ_PASS || "admin123",
+    // });
+
+    console.log("RabbitMQ Connection Established ✅");
+
+    connection.on("error", (err) => {
+      console.error("RabbitMQ Error:", err.message);
+    });
+
+    connection.on("close", () => {
+      console.error("RabbitMQ Connection Closed ❌");
+      connection = null;
+      confirmChannel = null;
+      reconnect();
+    });
+
+    // Create confirm channel for publishing
+    confirmChannel = await connection.createConfirmChannel(); 
+
+    // Setup exchanges
+    await setupExchanges();
+
+    console.log("RabbitMQ Ready 🚀");
+  } catch (error) {
+    console.error("RabbitMQ Connection Failed:", error.message);
+    reconnect();
+  }
+};
+
+export const getConfirmChannel = () => {
+  if (!confirmChannel) {
+    throw new Error("RabbitMQ not initialized");
+  }
+  return confirmChannel;
+};
+
+export const setupExchanges = async () => {
+  const ch = getConfirmChannel();
+
+  await ch.assertExchange(EXCHANGES.SEND_OTP, "topic", {
+    durable: true,
   });
 
-  const { mutate, isPending } = useRegister();
-  const onSubmit = (data) => {
-    console.log(data, "data white submit form");
-    console.log(register("firstName"));
-    delete data.confirmPassword;
+  console.log("All Exchanges Ready ✅");
+};
 
-    mutate(data, {
-      onSuccess: (response) => {
-        console.log(response, "hey sucess in ");
-        toast.success(data.message);
-         localStorage.setItem("verifyEmail", data.email);
-        navigate("/verify-otp");
-        // Next Sprint
-        // toast.success(response.message)
-        // navigate("/verify-otp")
-      },
+// Graceful Shutdown
+const shutdown = async () => {
+  try {
+    console.log("Closing RabbitMQ...");
+    await confirmChannel?.close();
+    await connection?.close();
+    console.log("RabbitMQ Closed Successfully 🔒");
+    process.exit(0);
+  } catch (error) {
+    console.error("Shutdown Error:", error);
+    process.exit(1);
+  }
+};
 
-      onError: (error) => {
-        console.log(error, "error in On error ");
-        toast.error(error.message);
-        console.log(error.response?.data);
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
+
+
+   await publishEvent("SEND_OTP", {
+      email: normalizedEmail,
+      otp,
+      type: "REGISTER",
+      firstName: firstName.trim(),
+    });
+
+
+    import { getConfirmChannel, EXCHANGES } from "../../config/rabbitmq.js";
+import crypto from "crypto";
+
+export const publishEvent = async (exchangeName, data, routingKey = "user.create") => {
+  try {
+    console.log(data, "data in publishEvent");
+
+    const channel = getConfirmChannel();
+    
+    const payload = Buffer.from(
+      JSON.stringify({
+        email: data.email,
+        phoneNumber: data.phoneNumber,
+        otp: data.otp,
+        type: data.type,
+        firstName: data.firstName,
+      }),
+    );
+
+    channel.publish(exchangeName, routingKey, payload, {
+      persistent: true,
+      messageId: crypto.randomUUID(),
+      timestamp: Date.now(),
+    });
+
+    await channel.waitForConfirms();
+    console.log(`✅ Message published to ${exchangeName} with routing key ${routingKey}`);
+    
+  } catch (error) {
+    console.error("Error while publishing:", error);
+    throw error;
+  }
+};
+
+//COMSUMER CODE 
+
+import amqplib from "amqplib";
+import startEmailConsumer from "../events/consumers/consumers.js";
+
+let connection = null;
+let confirmChannel = null;
+let reconnecting = false;
+
+const reconnect = () => {
+  if (reconnecting) return;
+  reconnecting = true;
+  console.log("Reconnecting RabbitMQ in 5 seconds...");
+  setTimeout(async () => {
+    reconnecting = false;
+    await connectRabbitMq();
+  }, 5000);
+};
+
+export const connectRabbitMq = async () => {
+  try {
+    // connection = await amqplib.connect({
+    //   protocol: "amqp",
+    //   hostname: process.env.RABBITMQ_HOST || "localhost",
+    //   port: parseInt(process.env.RABBITMQ_PORT || "5672"),
+    //   username: process.env.RABBITMQ_USER || "admin",
+    //   password: process.env.RABBITMQ_PASS || "admin123",
+    // });
+
+    connection = await amqplib.connect(process.env.RABBITMQ_URL)
+    await setUpQueue();
+    await startEmailConsumer();
+    console.log("RabbitMQ Connection Established ✅");
+
+    connection.on("error", (err) => {
+      console.error("RabbitMQ Error:", err.message);
+    });
+
+    connection.on("close", () => {
+      console.error("RabbitMQ Connection Closed ❌");
+      connection = null;
+      confirmChannel = null;
+      reconnect();
+    });
+
+    console.log("RabbitMQ Connected ✅");
+  } catch (error) {
+    console.error("RabbitMQ Connection Failed:", error.message);
+    reconnect();
+  }
+};
+
+export const createChannel = async () => {
+  if (!connection) {
+    throw new Error("RabbitMQ not connected");
+  }
+  return await connection.createChannel();
+};
+
+export const setUpQueue = async () => {
+  let channel;
+  try {
+    channel = await createChannel();
+    
+    // 1. Main Exchange
+    await channel.assertExchange("SEND_OTP", "topic", { durable: true });
+    
+    // 2. Retry Exchange
+    await channel.assertExchange("retry_email", "direct", { durable: true });
+    
+    // 3. DLX Exchange
+    await channel.assertExchange("dlx_exchange", "direct", { durable: true });
+
+    // 4. Main Queue - email_send
+    await channel.assertQueue("email_send", {
+      durable: true,
+      arguments: {
+        "x-dead-letter-exchange": "dlx_exchange",
+        "x-dead-letter-routing-key": "email.dead",
+        "x-message-ttl": 86400000, // 24 hours
       },
     });
-  };
+    await channel.bindQueue("email_send", "SEND_OTP", "user.create");
 
-  console.log(errors, "errors");
+    // 5. Retry Queue - FIXED ✅
+    await channel.assertQueue("retry_email_queue", {
+      durable: true,
+      arguments: {
+        "x-message-ttl": 5000, // 5 seconds
+        "x-dead-letter-exchange": "SEND_OTP", // 👈 Back to main exchange
+        "x-dead-letter-routing-key": "user.create", // 👈 Back to main routing key
+      },
+    });
+    await channel.bindQueue("retry_email_queue", "retry_email", "email.retry");
 
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      <Input
-        label="First Name"
-        {...register("firstName")}
-        error={errors.firstName?.message}
-      />
+    // 6. DLQ
+    await channel.assertQueue("email_dlq", { durable: true });
+    await channel.bindQueue("email_dlq", "dlx_exchange", "email.dead");
 
-      <Input
-        label="Last Name"
-        {...register("lastName")}
-        error={errors.lastName?.message}
-      />
-
-      <Input
-        label="Email"
-        type="email"
-        {...register("email")}
-        error={errors.email?.message}
-      />
-
-      <Input
-        label="Phone Number"
-        {...register("phoneNumber")}
-        error={errors.phoneNumber?.message}
-      />
-
-      <Input
-        label="Password"
-        type="password"
-        {...register("password")}
-        error={errors.password?.message}
-      />
-
-      <Input
-        label="Confirm Password"
-        type="password"
-        {...register("confirmPassword")}
-        error={errors.confirmPassword?.message}
-      />
-
-      <Button type="submit" loading={isPending}>
-        Register
-      </Button>
-    </form>
-  );
-}
-
-
-import { z } from "zod";
-
-export const registerSchema = z
-  .object({
-    firstName: z
-      .string()
-      .trim()
-      .min(2, "First name must be at least 2 characters")
-      .max(50),
-
-    lastName: z
-      .string()
-      .trim()
-      .min(2, "Last name must be at least 2 characters")
-      .max(50),
-
-    email: z.string().trim().email("Invalid email address"),
-
-    phoneNumber: z.string().regex(/^[6-9]\d{9}$/, "Invalid phone number"),
-
-    password: z
-      .string()
-      .min(8, "Password must contain at least 8 characters")
-      .regex(/[A-Z]/, "Must contain one uppercase letter")
-      .regex(/[a-z]/, "Must contain one lowercase letter")
-      .regex(/[0-9]/, "Must contain one number")
-      .regex(/[!@#$%^&*]/, "Must contain one special character"),
-
-    confirmPassword: z.string(),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    path: ["confirmPassword"],
-    message: "Passwords do not match",
-  });
-
-export const otpSchema = z.object({
-  otp: z
-    .string()
-    .trim()
-    .length(6, "OTP must be exactly 6 digits")
-    .regex(/^\d+$/, "OTP must contain only numbers"),
-});
-
-
-import { forwardRef } from "react";
-
-const Input = forwardRef(
-  (
-    {
-      label,
-      type = "text",
-      placeholder,
-      error,
-      className = "",
-      ...props
-    },
-    ref
-  ) => {
-    return (
-      <div className="mb-5">
-        {label && (
-          <label className="block mb-2 font-medium">
-            {label}
-          </label>
-        )}
-
-        <input
-          ref={ref}
-          type={type}
-          placeholder={placeholder}
-          className={`w-full border rounded-lg px-4 py-3 ${className}`}
-          {...props}
-        />
-
-        {error && (
-          <p className="text-red-500 text-sm mt-1">
-            {error}
-          </p>
-        )}
-      </div>
-    );
+    console.log("Queue setup completed ✅");
+  } catch (error) {
+    console.error("Queue setup failed:", error);
+    throw error;
+  } finally {
+    if (channel) await channel.close();
   }
-);
-
-Input.displayName = "Input";
-
-export default Input;
-
-import { useMutation } from "@tanstack/react-query";
-import { registerService, verifyOtpServices } from "../services/auth.service";
-
-export const useRegister = () => {
-  return useMutation({
-    mutationFn: registerService,
-  });
 };
 
-export const useverifyOtp  = () =>{
-  return useMutation({
-    mutationFn:verifyOtpServices
-  })
-}
-
-export const useResendOtp =() =>{
-  return useMutation({
-    
-  })
-}
+import amqplib from "amqplib";
+import { createChannel } from "../../config/rabbitmq.js";
+import { sendEmail } from "../../config/mail/sendmail.js";
+const MAX_RETRY = 3;
 
 
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import toast from "react-hot-toast";
+const startEmailConsumer = async () => {
+  let channel;
+  try {
+    channel = await createChannel();
+    await channel.prefetch(1);
 
-import Input from "../../../../components/ui/Input";
-import Button from "../../../../components/ui/Button";
+    await channel.consume("email_send", async (message) => {
+      if (!message) return;
+      
+      const messageData = JSON.parse(message.content.toString());
+      console.log(messageData, "messageData");
 
-import { otpSchema } from "../../schemas/auth.schema";
-import {
-  useverifyOtp,
-  useResendOtp,
-} from "../../hooks/useRegister";
+      const messageId = message.properties.messageId;
+      const headers = message.properties.headers || {};
+      const retryCount = headers["x-retry-count"] || 0;
+      try {
 
-const VerifyForm = () => {
-  const navigate = useNavigate();
+        console.log(messageId, "messageId");
+        console.log(headers, "headers");
+        console.log(retryCount, "retryCount");
 
-  const email = localStorage.getItem("verifyEmail") || "";
+        // Email send logic here
+        // throw new Error("Error while sending email"); // 👈 UNCOMMENT to test retry
+         await sendEmail(messageData.email,
+            "Your OTP Code",
+            `Your OTP for registration is: ${messageData.otp}`,
+         )
+        
+        channel.ack(message);
+      } catch (error) {
+        console.log(error, "error");
 
-  const getRemainingSeconds = () => {
-    const expiry = Number(localStorage.getItem("otpExpiry"));
+        if (retryCount >= MAX_RETRY) {
+          console.log("Max Retry Reached ❌ Moving To DLQ");
+          channel.nack(message, false, false);
+          return;
+        }
 
-    if (!expiry) return 0;
-
-    return Math.max(
-      0,
-      Math.floor((expiry - Date.now()) / 1000)
-    );
-  };
-
-  const [seconds, setSeconds] = useState(getRemainingSeconds());
-
-  const { mutate, isPending } = useverifyOtp();
-
-  const {
-    mutate: resendOtp,
-    isPending: resendLoading,
-  } = useResendOtp();
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isValid },
-  } = useForm({
-    resolver: zodResolver(otpSchema),
-    mode: "onChange",
-    defaultValues: {
-      otp: "",
-    },
-  });
-
-  useEffect(() => {
-    if (!email) {
-      navigate("/register");
-    }
-  }, [email, navigate]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const remaining = getRemainingSeconds();
-
-      setSeconds(remaining);
-
-      if (remaining <= 0) {
-        clearInterval(interval);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const onSubmit = (data) => {
-    mutate(
-      {
-        email,
-        otp: data.otp,
-      },
-      {
-        onSuccess: (response) => {
-          toast.success(response.message);
-
-          localStorage.removeItem("verifyEmail");
-          localStorage.removeItem("otpExpiry");
-
-          navigate("/login");
-        },
-
-        onError: (error) => {
-          toast.error(error.message);
-        },
-      }
-    );
-  };
-
-  const handleResend = () => {
-    resendOtp(
-      {
-        email,
-      },
-      {
-        onSuccess: (response) => {
-          toast.success(response.message);
-
-          const expiry = Date.now() + 90 * 1000;
-
-          localStorage.setItem(
-            "otpExpiry",
-            expiry.toString()
-          );
-
-          setSeconds(90);
-        },
-
-        onError: (error) => {
-          toast.error(error.message);
-        },
-      }
-    );
-  };
-
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-
-  return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-5"
-    >
-      <Input
-        label="Email"
-        value={email}
-        disabled
-      />
-
-      <Input
-        label="OTP"
-        placeholder="Enter OTP"
-        type="text"
-        inputMode="numeric"
-        maxLength={6}
-        autoComplete="one-time-code"
-        error={errors.otp?.message}
-        {...register("otp", {
-          onChange: (e) => {
-            e.target.value = e.target.value
-              .replace(/\D/g, "")
-              .slice(0, 6);
+        // Publish to retry exchange
+        channel.publish("retry_email", "email.retry", message.content, {
+          persistent: true,
+          messageId: message.properties.messageId,
+          headers: {
+            ...message.properties.headers,
+            "x-retry-count": retryCount + 1,
           },
-        })}
-      />
+        });
 
-      {seconds > 0 ? (
-        <p className="text-sm text-gray-500">
-          Resend OTP in{" "}
-          <strong>
-            {minutes}:
-            {remainingSeconds
-              .toString()
-              .padStart(2, "0")}
-          </strong>
-        </p>
-      ) : (
-        <button
-          type="button"
-          onClick={handleResend}
-          disabled={resendLoading}
-          className="text-blue-600 hover:underline"
-        >
-          {resendLoading
-            ? "Sending..."
-            : "Resend OTP"}
-        </button>
-      )}
+        console.log(`Retry Scheduled ${retryCount + 1}`);
+        channel.ack(message);
+      }
+    });
 
-      <Button
-        type="submit"
-        loading={isPending}
-        disabled={!isValid}
-      >
-        Verify OTP
-      </Button>
-    </form>
-  );
+    console.log("Email consumer started ✅");
+  } catch (error) {
+    console.log("Consumer error:", error);
+    throw error;
+  }
 };
 
-export default VerifyForm;
-
-
-here i want like this if user register on the registration form 
-redirect to verify otp page and set the email pre filled and give otp box to put otpbut when user register and refirect to verfiy page show counter as well and user and after 1:30 min or 90 sec show resend button 
-
-but suppose user refresh the page dont refresh the count its still normal and spposue counter on 1:00 remiang user refresh the page dont reset the time again 1:30 give actual time left 
+export default startEmailConsumer;
