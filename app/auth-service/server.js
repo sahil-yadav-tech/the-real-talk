@@ -13,6 +13,7 @@ const start = async () => {
     await connectDB();
     await connectRabbitMq()
     
+    
     const server = app.listen(PORT, () => {
       console.log(`[server] Running on port ${PORT} 🚀`);
     });
