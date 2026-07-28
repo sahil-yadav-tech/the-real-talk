@@ -27,5 +27,4 @@ redis.on("error", (err) => {
   console.error("❌ Redis connection error:", err.message);
 });
 
-
 export default redis;
